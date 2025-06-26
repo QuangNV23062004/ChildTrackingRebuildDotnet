@@ -5,6 +5,7 @@ using System.Security.Cryptography;
 using System.Text;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.IdentityModel.Tokens;
+using MongoDB.Bson;
 using RestAPI.Models;
 using RestAPI.Repositories.interfaces;
 using RestAPI.Repositories.repositories;
@@ -17,11 +18,14 @@ public class AuthService(IUserRepository _userRepository) : IAuthService
 {
     private string GenerateJsonWebToken(UserModel user)
     {
+
         var claims = new List<Claim>
+
     {
         new Claim(ClaimTypes.Name, user.Name),
-        new Claim("userId", user.Id.ToString()),
-        new Claim("role", user.Role.ToString()),
+        new Claim("userId", user.Id?.ToString() ?? ""),
+        new Claim("role", user.Role ?? "User"),
+        new Claim("position", user.Role ?? "User"),
     };
 
         var jwtSecret = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(Environment.GetEnvironmentVariable("JWT_SECRET")!)) ?? throw new ArgumentNullException("JWT_SECRET is not configured"); ;
@@ -57,6 +61,7 @@ public class AuthService(IUserRepository _userRepository) : IAuthService
                 throw new InvalidOperationException("User with this email already exists");
             }
 
+            user.Id = ObjectId.GenerateNewId().ToString();
             user.Password = new PasswordHasher<UserModel>().HashPassword(user, user.Password);
             return await _userRepository.CreateAsync(user);
 

@@ -3,6 +3,7 @@ using Humanizer;
 using Microsoft.Extensions.Options;
 using MongoDB.Bson;
 using MongoDB.Driver;
+using RestAPI.Helpers;
 using RestAPI.Repositories.database;
 using RestAPI.Repositories.Interfaces;
 
@@ -38,7 +39,51 @@ public class Repository<T> : IBaseRepository<T> where T : class
         }
     }
 
+    public async Task<PaginationResult<T>> GetAllAsyncWithPagination(QueryParams query)
+    {
+        try
+        {
+            var filter = Builders<T>.Filter.Eq("isDeleted", false);
 
+            // Search filter (if any)
+            if (!string.IsNullOrWhiteSpace(query.Search))
+            {
+                var searchFilter = Builders<T>.Filter.Regex("name", new BsonRegularExpression(query.Search, "i"));
+                filter = Builders<T>.Filter.And(filter, searchFilter);
+            }
+
+            var total = await _collection.CountDocumentsAsync(filter);
+
+            var sortBy = !string.IsNullOrWhiteSpace(query.SortBy) ? query.SortBy : "createdAt";
+            var isDescending = query.Order?.ToLower() == "descending";
+
+            var sort = isDescending
+                ? Builders<T>.Sort.Descending(sortBy)
+                : Builders<T>.Sort.Ascending(sortBy);
+
+            var page = Math.Max(query.Page, 1);
+            var size = Math.Max(query.Size, 1);
+            var skip = (page - 1) * size;
+
+            var data = await _collection.Find(filter)
+                                        .Sort(sort)
+                                        .Skip(skip)
+                                        .Limit(size)
+                                        .ToListAsync();
+
+            return new PaginationResult<T>
+            {
+                Page = page,
+                Total = (int)total,
+                TotalPages = (int)Math.Ceiling((double)total / size),
+                Data = data
+            };
+        }
+        catch (Exception ex)
+        {
+            throw new Exception("Failed to retrieve paginated records.", ex);
+        }
+    }
     public async Task<T?> GetByIdAsync(string id)
     {
         try
@@ -73,12 +118,13 @@ public class Repository<T> : IBaseRepository<T> where T : class
     {
         try
         {
-            var idProperty = typeof(T).GetProperty("Id");
-            if (idProperty != null && idProperty.PropertyType == typeof(ObjectId?) && idProperty.GetValue(entity) == null)
+            if (entity == null)
             {
-                // Generate a new ObjectId and set it
-                idProperty.SetValue(entity, ObjectId.GenerateNewId());
+                throw new ArgumentNullException(nameof(entity), "Entity cannot be null");
             }
+            
+            // Let MongoDB handle ObjectId generation automatically
+            // The BsonRepresentation attribute will handle the conversion
             await _collection.InsertOneAsync(entity);
 
             return entity;

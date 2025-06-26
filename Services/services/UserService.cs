@@ -3,10 +3,13 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Security.Cryptography;
 using System.Threading.Tasks;
+using RestAPI.Helpers;
 using RestAPI.Models;
 using RestAPI.Repositories.interfaces;
 using RestAPI.Repositories.repositories;
 using RestAPI.Services.interfaces;
+using MongoDB.Bson;
+
 
 namespace RestAPI.Services.services
 {
@@ -15,11 +18,15 @@ namespace RestAPI.Services.services
 
 
 
-        public Task<UserModel> DeleteUser(string id)
+        public async Task<UserModel> DeleteUser(string id)
         {
             try
             {
-                var _user = _userRepository.DeleteAsync(id);
+                var _user = await _userRepository.DeleteAsync(id);
+                if (_user == null)
+                {
+                    throw new KeyNotFoundException("User not found");
+                }
                 return _user;
             }
             catch (Exception)
@@ -29,11 +36,15 @@ namespace RestAPI.Services.services
             }
         }
 
-        public Task<UserModel> GetUser(string id)
+        public async Task<UserModel> GetUser(string id)
         {
             try
             {
-                var _user = _userRepository.GetByIdAsync(id);
+                var _user = await _userRepository.GetByIdAsync(id);
+                if (_user == null)
+                {
+                    throw new KeyNotFoundException("User not found");
+                }
                 return _user;
             }
             catch (Exception)
@@ -43,12 +54,12 @@ namespace RestAPI.Services.services
             }
         }
 
-        public async Task<UserModel[]> GetUsers()
+        public async Task<PaginationResult<UserModel>> GetUsers(QueryParams query)
         {
             try
             {
-                var _users = await _userRepository.GetAllAsync();
-                return [.. _users];
+                var _users = await _userRepository.GetAllAsyncWithPagination(query);
+                return _users;
             }
             catch (Exception)
             {

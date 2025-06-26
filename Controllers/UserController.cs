@@ -1,10 +1,13 @@
+using Azure;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using RestAPI.Dtos;
+using RestAPI.Helpers;
 using RestAPI.Models;
 using RestAPI.Services.interfaces;
 using RestAPI.Services.services;
+using RestAPI.Repositories.interfaces;
 
 namespace RestAPI.Controllers
 {
@@ -14,31 +17,32 @@ namespace RestAPI.Controllers
     public class UserController(IUserService userService) : ControllerBase
     {
         [HttpGet("/")]
-        [Authorize(Roles = "1")]
-        public async Task<ActionResult<UserModel[]>> GetUsers()
+        [Authorize(Roles = "Admin")]
+        public async Task<ActionResult<PaginationResult<UserModel>>> GetUsers([FromQuery] QueryParams query)
         {
+
             try
             {
-                var users = await userService.GetUsers();
+                var users = await userService.GetUsers(query);
                 return StatusCode(StatusCodes.Status200OK, new
                 {
-                    user = users,
+                    data = users.Data,
+                    total = users.Total,
+                    page = users.Page,
+                    totalPages = users.TotalPages,
                     message = "Get users successful"
                 });
             }
-            catch (System.Exception ex)
+            catch (System.Exception)
             {
 
-                return StatusCode(StatusCodes.Status500InternalServerError, new
-                {
-                    message = ex.Message
-                });
+                throw;
             }
         }
 
 
         [HttpGet("/{id}")]
-        [Authorize(Roles = "0,1")]
+        [Authorize(Roles = "User,Admin")]
         public async Task<ActionResult<UserModel>> GetUser(string id)
         {
             try
@@ -56,18 +60,14 @@ namespace RestAPI.Controllers
                     message = "Get user successful"
                 });
             }
-            catch (System.Exception ex)
+            catch (System.Exception)
             {
-
-                return StatusCode(StatusCodes.Status500InternalServerError, new
-                {
-                    message = ex.Message
-                });
+                throw;
             }
         }
 
         [HttpPatch("/{id}")]
-        [Authorize(Roles = "0,1")]
+        [Authorize(Roles = "User,Admin")]
         public async Task<ActionResult<UserModel>> UpdateUser(string id, [FromBody] UserDto userDto)
         {
             try
@@ -90,18 +90,15 @@ namespace RestAPI.Controllers
                     message = "Update user successful"
                 });
             }
-            catch (System.Exception ex)
+            catch (System.Exception)
             {
-                return StatusCode(StatusCodes.Status500InternalServerError, new
-                {
-                    message = ex.Message
-                });
+                throw;
             }
         }
 
 
         [HttpDelete("/{id}")]
-        [Authorize(Roles = "1")]
+        [Authorize(Roles = "Admin")]
         public async Task<ActionResult<UserModel>> DeleteUser(string id)
         {
             try
@@ -114,13 +111,9 @@ namespace RestAPI.Controllers
                     message = "Delete user successfully"
                 });
             }
-            catch (System.Exception ex)
+            catch (System.Exception)
             {
-
-                return StatusCode(StatusCodes.Status500InternalServerError, new
-                {
-                    message = ex.Message
-                });
+                throw;
             }
         }
     }

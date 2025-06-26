@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using RestAPI.Helpers;
 using RestAPI.Models;
 
 namespace RestAPI.Services.interfaces
@@ -10,7 +11,7 @@ namespace RestAPI.Services.interfaces
     {
 
         Task<UserModel> GetUser(string id);
-        Task<UserModel[]> GetUsers();
+        Task<PaginationResult<UserModel>> GetUsers(QueryParams query);
         Task<UserModel> UpdateUser(string id, string Name, string Email);
         Task<UserModel> DeleteUser(string id);
     }

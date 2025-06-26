@@ -11,6 +11,7 @@ using System.Text;
 using Microsoft.OpenApi.Models;
 using MongoDB.Driver;
 using Microsoft.Extensions.Options;
+using RestAPI.Middlewares;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -19,8 +20,10 @@ Env.Load();
 
 // Add services to DI container
 builder.Services.AddScoped<IUserRepository, UserRepository>();
+builder.Services.AddScoped<IChildRepository, ChildRepository>();
 builder.Services.AddScoped<IUserService, UserService>();
 builder.Services.AddScoped<IAuthService, AuthService>();
+builder.Services.AddScoped<IChildService, ChildService>();
 
 // MongoDB Configuration
 builder.Services.Configure<MongoDBSettings>(options =>
@@ -130,11 +133,13 @@ if (app.Environment.IsDevelopment())
 }
 app.UseCors("AllowAll");
 app.UseHttpsRedirection();
+app.UseMiddleware<ErrorHandlingMiddleware>();
 app.UseRouting();
 
 // Authentication & Authorization
 app.UseAuthentication();
 app.UseAuthorization();
+app.UseMiddleware<UserInfoMiddleware>(); 
 
 app.MapControllers();
 
