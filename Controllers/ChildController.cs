@@ -99,13 +99,13 @@ namespace RestAPI.Controllers
             }
         }
 
-        [HttpGet("user/{userId}")]
-        public async Task<IActionResult> GetChildrenByUserId(string userId, [FromQuery] QueryParams query)
+        [HttpGet("user/{id}")]
+        public async Task<IActionResult> GetChildrenByUserId(string id, [FromQuery] QueryParams query)
         {
             try
             {
                 var requester = HttpContext.Items["UserInfo"] as UserInfo;
-                var result = await _childService.GetChildrenByUserIdAsync(userId, requester!, query);
+                var result = await _childService.GetChildrenByUserIdAsync(id, requester!, query);
 
                 return Ok(new
                 {

@@ -16,7 +16,7 @@ namespace RestAPI.Controllers
     [Authorize]
     public class UserController(IUserService userService) : ControllerBase
     {
-        [HttpGet("/")]
+        [HttpGet("/api")]
         [Authorize(Roles = "Admin")]
         public async Task<ActionResult<PaginationResult<UserModel>>> GetUsers([FromQuery] QueryParams query)
         {
@@ -41,7 +41,7 @@ namespace RestAPI.Controllers
         }
 
 
-        [HttpGet("/{id}")]
+        [HttpGet("/api/{id}")]
         [Authorize(Roles = "User,Admin")]
         public async Task<ActionResult<UserModel>> GetUser(string id)
         {
@@ -66,7 +66,7 @@ namespace RestAPI.Controllers
             }
         }
 
-        [HttpPatch("/{id}")]
+        [HttpPatch("/api/{id}")]
         [Authorize(Roles = "User,Admin")]
         public async Task<ActionResult<UserModel>> UpdateUser(string id, [FromBody] UserDto userDto)
         {
@@ -97,7 +97,7 @@ namespace RestAPI.Controllers
         }
 
 
-        [HttpDelete("/{id}")]
+        [HttpDelete("/api/{id}")]
         [Authorize(Roles = "Admin")]
         public async Task<ActionResult<UserModel>> DeleteUser(string id)
         {
