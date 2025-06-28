@@ -1,5 +1,6 @@
 using System;
 using Microsoft.Extensions.Options;
+using MongoDB.Bson;
 using MongoDB.Driver;
 using RestAPI.Helpers;
 using RestAPI.Models;
@@ -18,7 +19,7 @@ public class ChildRepository : Repository<ChildModel>, IChildRepository
         try
         {
             var filter = Builders<ChildModel>.Filter.And(
-                Builders<ChildModel>.Filter.Eq(c => c.GuardianId, id),
+                Builders<ChildModel>.Filter.Eq("GuardianId", new ObjectId(id)),
                 Builders<ChildModel>.Filter.Eq(c => c.IsDeleted, false)
             );
 
@@ -40,6 +41,8 @@ public class ChildRepository : Repository<ChildModel>, IChildRepository
                                         .Skip(skip)
                                         .Limit(size)
                                         .ToListAsync();
+            
+            Console.WriteLine(data);
 
             return new PaginationResult<ChildModel>
             {

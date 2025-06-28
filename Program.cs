@@ -21,9 +21,14 @@ Env.Load();
 // Add services to DI container
 builder.Services.AddScoped<IUserRepository, UserRepository>();
 builder.Services.AddScoped<IChildRepository, ChildRepository>();
+builder.Services.AddScoped<IGrowthDataRepository, GrowthDataRepository>();
+builder.Services.AddScoped<IGrowthMetricForAgeRepository, GrowthMetricsForAgeRepository>();
+builder.Services.AddScoped<IGrowthVelocitoryRepository, GrowthVelocityRepository>();
+builder.Services.AddScoped<IWflhRepository, WflhRepository>();
 builder.Services.AddScoped<IUserService, UserService>();
 builder.Services.AddScoped<IAuthService, AuthService>();
 builder.Services.AddScoped<IChildService, ChildService>();
+builder.Services.AddScoped<IGrowthDataService, GrowthDataService>();
 
 // MongoDB Configuration
 builder.Services.Configure<MongoDBSettings>(options =>

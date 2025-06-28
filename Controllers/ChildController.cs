@@ -7,7 +7,8 @@ using Microsoft.AspNetCore.Mvc;
 using RestAPI.Helpers;
 using RestAPI.Models;
 using RestAPI.Services.interfaces;
-
+using RestAPI.Dtos;
+using RestAPI.Enums;
 namespace RestAPI.Controllers
 {
 
@@ -17,12 +18,24 @@ namespace RestAPI.Controllers
     public class ChildController(IChildService _childService) : ControllerBase
     {
         [HttpPost]
-        public async Task<IActionResult> CreateChild([FromBody] ChildModel childData)
+        public async Task<IActionResult> CreateChild([FromBody] ChildDto.CreateChildDto childData)
         {
             try
             {
-                var requester = HttpContext.Items["UserInfo"] as UserInfo;
-                var created = await _childService.CreateChildAsync(requester!, childData);
+                    var requester = HttpContext.Items["UserInfo"] as UserInfo;
+                
+                var childModel = new ChildModel
+                {
+                    Name = childData.Name,
+                    Gender = (GenderEnum)childData.Gender,
+                    BirthDate = childData.BirthDate,
+                    Note = childData.Note,
+                    FeedingType = childData.FeedingType,
+                    Allergies = childData.Allergies,
+                    GuardianId = requester!.UserId
+                };
+                
+                var created = await _childService.CreateChildAsync(requester!, childModel);
 
                 return Ok(new
                 {
@@ -37,13 +50,23 @@ namespace RestAPI.Controllers
             }
         }
 
-        [HttpPut("{childId}")]
-        public async Task<IActionResult> UpdateChild(string childId, [FromBody] ChildModel updateData)
+        [HttpPut("{id}")]
+        public async Task<IActionResult> UpdateChild(string childId, [FromBody] ChildDto.UpdateChildDto updateData)
         {
             try
             {
                 var requester = HttpContext.Items["UserInfo"] as UserInfo;
-                var updated = await _childService.UpdateChildAsync(childId, requester!, updateData);
+
+                var childModel = new ChildModel
+                {
+                    Name = updateData.Name,
+                    Gender = (GenderEnum)updateData.Gender,
+                    BirthDate = updateData.BirthDate,
+                    Note = updateData.Note,
+                    FeedingType = updateData.FeedingType,
+                    Allergies = updateData.Allergies,
+                };
+                var updated = await _childService.UpdateChildAsync(childId, requester!, childModel);
 
                 return Ok(new
                 {
@@ -58,7 +81,7 @@ namespace RestAPI.Controllers
             }
         }
 
-        [HttpDelete("{childId}")]
+        [HttpDelete("{id}")]
         public async Task<IActionResult> DeleteChild(string childId)
         {
             try
@@ -78,7 +101,7 @@ namespace RestAPI.Controllers
             }
         }
 
-        [HttpGet("{childId}")]
+        [HttpGet("{id}")]
         public async Task<IActionResult> GetChildById(string childId)
         {
             try

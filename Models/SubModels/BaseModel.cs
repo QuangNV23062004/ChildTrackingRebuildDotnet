@@ -15,4 +15,7 @@ public class BaseModel
     [BsonElement("updatedAt"), BsonRepresentation(BsonType.DateTime)]
     [BsonDateTimeOptions(Kind = DateTimeKind.Utc)]
     public DateTime UpdatedAt { get; set; } = DateTime.UtcNow;
+
+    [BsonElement("__v"), BsonRepresentation(BsonType.Int32)]
+    public int __v { get; set; } = 0;
 }

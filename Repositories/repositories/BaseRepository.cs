@@ -22,7 +22,7 @@ public class Repository<T> : IBaseRepository<T> where T : class
         if (name.EndsWith("Model"))
             name = name[..^"Model".Length];
 
-
+        Console.WriteLine("[Repository] Collection name: " + name.Pluralize().ToLower());
         _collection = database.GetCollection<T>(name.Pluralize().ToLower());
     }
 
