@@ -3,20 +3,37 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Security.Cryptography;
 using System.Threading.Tasks;
+using Microsoft.AspNetCore.Identity;
+using MongoDB.Bson;
 using RestAPI.Helpers;
 using RestAPI.Models;
 using RestAPI.Repositories.interfaces;
 using RestAPI.Repositories.repositories;
 using RestAPI.Services.interfaces;
-using MongoDB.Bson;
-
 
 namespace RestAPI.Services.services
 {
     public class UserService(IUserRepository _userRepository) : IUserService
     {
+        public async Task<UserModel> CreateUser(UserModel user)
+        {
+            try
+            {
+                var existingUser = await _userRepository.GetUserByEmail(user.Email);
+                if (existingUser != null)
+                {
+                    throw new Exception("User already exists");
+                }
 
-
+                user.Id = ObjectId.GenerateNewId().ToString();
+                user.Password = new PasswordHasher<UserModel>().HashPassword(user, user.Password);
+                return await _userRepository.CreateAsync(user);
+            }
+            catch (Exception)
+            {
+                throw;
+            }
+        }
 
         public async Task<UserModel> DeleteUser(string id)
         {
@@ -31,7 +48,6 @@ namespace RestAPI.Services.services
             }
             catch (Exception)
             {
-
                 throw;
             }
         }
@@ -49,7 +65,6 @@ namespace RestAPI.Services.services
             }
             catch (Exception)
             {
-
                 throw;
             }
         }
@@ -63,7 +78,6 @@ namespace RestAPI.Services.services
             }
             catch (Exception)
             {
-
                 throw;
             }
         }
@@ -89,11 +103,8 @@ namespace RestAPI.Services.services
             }
             catch (Exception)
             {
-
                 throw;
             }
         }
-
-
     }
 }

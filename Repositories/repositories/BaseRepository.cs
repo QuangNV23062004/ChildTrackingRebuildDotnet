@@ -2,14 +2,17 @@ using System;
 using Humanizer;
 using Microsoft.Extensions.Options;
 using MongoDB.Bson;
+using MongoDB.Bson.Serialization;
 using MongoDB.Driver;
 using RestAPI.Helpers;
+using RestAPI.Models.SubModels;
 using RestAPI.Repositories.database;
 using RestAPI.Repositories.Interfaces;
 
 namespace RestAPI.Repositories.repositories;
 
-public class Repository<T> : IBaseRepository<T> where T : class
+public class Repository<T> : IBaseRepository<T>
+    where T : class
 {
     protected readonly IMongoCollection<T> _collection;
 
@@ -26,12 +29,75 @@ public class Repository<T> : IBaseRepository<T> where T : class
         _collection = database.GetCollection<T>(name.Pluralize().ToLower());
     }
 
-    public async Task<IEnumerable<T>> GetAllAsync()
+    public async Task<T> CreateAsync(T entity)
     {
         try
         {
-            var filter = Builders<T>.Filter.Eq("isDeleted", false);
-            return await _collection.Find(filter).ToListAsync();
+            await _collection.InsertOneAsync(entity);
+            return entity;
+        }
+        catch (Exception ex)
+        {
+            throw new Exception($"Failed to create {typeof(T).Name}.", ex);
+        }
+    }
+
+    public async Task<IEnumerable<T>> GetAllAsync(PopulationModel[]? populationParams = null)
+    {
+        try
+        {
+            var facetPipeline = new List<BsonDocument>
+            {
+                new BsonDocument("$match", new BsonDocument { ["isDeleted"] = false }),
+            };
+
+            if (populationParams != null && populationParams.Length > 0)
+            {
+                foreach (var param in populationParams)
+                {
+                    facetPipeline.Add(
+                        new BsonDocument(
+                            "$lookup",
+                            new BsonDocument
+                            {
+                                ["from"] = param.Collection,
+                                ["localField"] = param.LocalField,
+                                ["foreignField"] = param.ForeignField,
+                                ["as"] = param.As,
+                            }
+                        )
+                    );
+                    facetPipeline.Add(
+                        new BsonDocument("$unwind", new BsonDocument { ["path"] = $"${param.As}" })
+                    );
+                }
+            }
+            facetPipeline.Add(
+                new BsonDocument(
+                    new BsonDocument(
+                        "$facet",
+                        new BsonDocument
+                        {
+                            ["count"] = new BsonArray { new BsonDocument("$count", "total") },
+                            ["data"] = new BsonArray
+                            {
+                                new BsonDocument("$sort", new BsonDocument { ["createdAt"] = -1 }),
+                                new BsonDocument("$skip", 0),
+                            },
+                        }
+                    )
+                )
+            );
+
+            var facetResult = await _collection
+                .Aggregate<BsonDocument>(facetPipeline)
+                .FirstOrDefaultAsync();
+            var dataArray = facetResult?["data"]?.AsBsonArray ?? new BsonArray();
+            var data = dataArray
+                .Select(doc => BsonSerializer.Deserialize<T>(doc.AsBsonDocument))
+                .ToList();
+
+            return data;
         }
         catch (Exception ex)
         {
@@ -39,44 +105,73 @@ public class Repository<T> : IBaseRepository<T> where T : class
         }
     }
 
-    public async Task<PaginationResult<T>> GetAllAsyncWithPagination(QueryParams query)
+    public async Task<PaginationResult<T>> GetAllAsyncWithPagination(
+        QueryParams query,
+        PopulationModel[]? populationParams = null
+    )
     {
         try
         {
-            var filter = Builders<T>.Filter.Eq("isDeleted", false);
-
-            // Search filter (if any)
-            if (!string.IsNullOrWhiteSpace(query.Search))
+            var facetPipeline = new List<BsonDocument>
             {
-                var searchFilter = Builders<T>.Filter.Regex("name", new BsonRegularExpression(query.Search, "i"));
-                filter = Builders<T>.Filter.And(filter, searchFilter);
+                new BsonDocument("$match", new BsonDocument { ["isDeleted"] = false }),
+            };
+
+            if (populationParams != null && populationParams.Length > 0)
+            {
+                foreach (var param in populationParams)
+                {
+                    facetPipeline.Add(
+                        new BsonDocument(
+                            "$lookup",
+                            new BsonDocument
+                            {
+                                ["from"] = param.Collection,
+                                ["localField"] = param.LocalField,
+                                ["foreignField"] = param.ForeignField,
+                                ["as"] = param.As,
+                            }
+                        )
+                    );
+                    facetPipeline.Add(
+                        new BsonDocument("$unwind", new BsonDocument { ["path"] = $"${param.As}" })
+                    );
+                }
             }
 
-            var total = await _collection.CountDocumentsAsync(filter);
+            facetPipeline.Add(
+                new BsonDocument(
+                    new BsonDocument(
+                        "$facet",
+                        new BsonDocument
+                        {
+                            ["count"] = new BsonArray { new BsonDocument("$count", "total") },
+                            ["data"] = new BsonArray
+                            {
+                                new BsonDocument("$sort", new BsonDocument { ["createdAt"] = -1 }),
+                                new BsonDocument("$skip", (query.Page - 1) * query.Size),
+                                new BsonDocument("$limit", query.Size),
+                            },
+                        }
+                    )
+                )
+            );
 
-            var sortBy = !string.IsNullOrWhiteSpace(query.SortBy) ? query.SortBy : "createdAt";
-            var isDescending = query.Order?.ToLower() == "descending";
-
-            var sort = isDescending
-                ? Builders<T>.Sort.Descending(sortBy)
-                : Builders<T>.Sort.Ascending(sortBy);
-
-            var page = Math.Max(query.Page, 1);
-            var size = Math.Max(query.Size, 1);
-            var skip = (page - 1) * size;
-
-            var data = await _collection.Find(filter)
-                                        .Sort(sort)
-                                        .Skip(skip)
-                                        .Limit(size)
-                                        .ToListAsync();
+            var facetResult = await _collection
+                .Aggregate<BsonDocument>(facetPipeline)
+                .FirstOrDefaultAsync();
+            var total = facetResult?["count"]?.AsBsonArray.FirstOrDefault()?["total"].AsInt32 ?? 0;
+            var dataArray = facetResult?["data"]?.AsBsonArray ?? new BsonArray();
+            var data = dataArray
+                .Select(doc => BsonSerializer.Deserialize<T>(doc.AsBsonDocument))
+                .ToList();
 
             return new PaginationResult<T>
             {
-                Page = page,
-                Total = (int)total,
-                TotalPages = (int)Math.Ceiling((double)total / size),
-                Data = data
+                Page = query.Page,
+                Total = total,
+                TotalPages = (int)Math.Ceiling((double)total / query.Size),
+                Data = data,
             };
         }
         catch (Exception ex)
@@ -84,21 +179,51 @@ public class Repository<T> : IBaseRepository<T> where T : class
             throw new Exception("Failed to retrieve paginated records.", ex);
         }
     }
-    public async Task<T?> GetByIdAsync(string id)
+
+    public async Task<T?> GetByIdAsync(string id, PopulationModel[]? populationParams = null)
     {
         try
         {
-            var objectId = new ObjectId(id);
-            var filter = Builders<T>.Filter.And(
-                Builders<T>.Filter.Eq("_id", objectId),
-                Builders<T>.Filter.Eq("isDeleted", false)
-            );
+            var facetPipeline = new List<BsonDocument>
+            {
+                new BsonDocument(
+                    "$match",
+                    new BsonDocument
+                    {
+                        ["_id"] = new BsonObjectId(ObjectId.Parse(id)),
+                        ["isDeleted"] = false,
+                    }
+                ),
+            };
 
-            var result = await _collection.Find(filter).FirstOrDefaultAsync();
+            if (populationParams != null && populationParams.Length > 0)
+            {
+                foreach (var param in populationParams)
+                {
+                    facetPipeline.Add(
+                        new BsonDocument(
+                            "$lookup",
+                            new BsonDocument
+                            {
+                                ["from"] = param.Collection,
+                                ["localField"] = param.LocalField,
+                                ["foreignField"] = param.ForeignField,
+                                ["as"] = param.As,
+                            }
+                        )
+                    );
+                    facetPipeline.Add(
+                        new BsonDocument("$unwind", new BsonDocument { ["path"] = $"${param.As}" })
+                    );
+                }
+            }
 
+            var result = await _collection.Aggregate<T>(facetPipeline).FirstOrDefaultAsync();
             if (result == null)
             {
-                throw new KeyNotFoundException($"{typeof(T).Name} with ID '{id}' not found or has been deleted.");
+                throw new KeyNotFoundException(
+                    $"{typeof(T).Name} with ID '{id}' not found or has been deleted."
+                );
             }
 
             return result;
@@ -110,28 +235,6 @@ public class Repository<T> : IBaseRepository<T> where T : class
         catch (Exception ex)
         {
             throw new Exception($"Failed to retrieve {typeof(T).Name} by ID.", ex);
-        }
-    }
-
-
-    public async Task<T> CreateAsync(T entity)
-    {
-        try
-        {
-            if (entity == null)
-            {
-                throw new ArgumentNullException(nameof(entity), "Entity cannot be null");
-            }
-            
-            // Let MongoDB handle ObjectId generation automatically
-            // The BsonRepresentation attribute will handle the conversion
-            await _collection.InsertOneAsync(entity);
-
-            return entity;
-        }
-        catch (Exception ex)
-        {
-            throw new Exception($"Failed to create {typeof(T).Name}.", ex);
         }
     }
 
@@ -156,7 +259,6 @@ public class Repository<T> : IBaseRepository<T> where T : class
         }
     }
 
-
     public async Task<T?> DeleteAsync(string id)
     {
         try
@@ -168,10 +270,8 @@ public class Repository<T> : IBaseRepository<T> where T : class
             var updated = await _collection.FindOneAndUpdateAsync(
                 filter,
                 update,
-                new FindOneAndUpdateOptions<T>
-                {
-                    ReturnDocument = ReturnDocument.After
-                });
+                new FindOneAndUpdateOptions<T> { ReturnDocument = ReturnDocument.After }
+            );
 
             if (updated == null)
                 throw new KeyNotFoundException($"{typeof(T).Name} with ID '{id}' not found.");
@@ -183,6 +283,4 @@ public class Repository<T> : IBaseRepository<T> where T : class
             throw new Exception($"Failed to delete {typeof(T).Name}.", ex);
         }
     }
-
-
 }

@@ -103,16 +103,21 @@ namespace RestAPI.Services.services
             ChildModel child
         )
         {
-            Console.WriteLine($"[generateGrowthResult] Starting calculation for child: {child.Name}");
-            Console.WriteLine($"[generateGrowthResult] Input data - Height: {growthData.Height}, Weight: {growthData.Weight}, HeadCircumference: {growthData.HeadCircumference}");
-            Console.WriteLine($"[generateGrowthResult] Child info - Gender: {child.Gender}, BirthDate: {child.BirthDate}");
+            Console.WriteLine(
+                $"[generateGrowthResult] Starting calculation for child: {child.Name}"
+            );
+            Console.WriteLine(
+                $"[generateGrowthResult] Input data - Height: {growthData.Height}, Weight: {growthData.Weight}, HeadCircumference: {growthData.HeadCircumference}"
+            );
+            Console.WriteLine(
+                $"[generateGrowthResult] Child info - Gender: {child.Gender}, BirthDate: {child.BirthDate}"
+            );
 
             double conversionRate = 30.4375;
 
             var today = growthData.InputDate.ToUniversalTime().Ticks;
             var birth = child.BirthDate.ToUniversalTime().Ticks;
 
-          
             var diffInDays = TimeSpan.FromTicks(today - birth).TotalDays;
             double diffInWeeks = diffInDays / 7;
             double diffInMonths = diffInDays / conversionRate;
@@ -121,7 +126,9 @@ namespace RestAPI.Services.services
             var ageInWeeks = Math.Round(diffInWeeks);
             var ageInMonths = Math.Round(diffInMonths);
 
-            Console.WriteLine($"[generateGrowthResult] Age calculated - Days: {ageInDays}, Weeks: {ageInWeeks}, Months: {ageInMonths}");
+            Console.WriteLine(
+                $"[generateGrowthResult] Age calculated - Days: {ageInDays}, Weeks: {ageInWeeks}, Months: {ageInMonths}"
+            );
 
             List<GrowthMetricForAgeModel> growthMetricsForAgeData;
             if (ageInDays <= 1856)
@@ -136,7 +143,9 @@ namespace RestAPI.Services.services
             }
             else
             {
-                Console.WriteLine($"[generateGrowthResult] Using monthly metrics (age > 1856 days)");
+                Console.WriteLine(
+                    $"[generateGrowthResult] Using monthly metrics (age > 1856 days)"
+                );
                 growthMetricsForAgeData =
                     await _growthMetricForAgeRepository.GetGrowthMetricsForAgeData(
                         (int)child.Gender,
@@ -145,7 +154,9 @@ namespace RestAPI.Services.services
                     );
             }
 
-            Console.WriteLine($"[generateGrowthResult] Retrieved {growthMetricsForAgeData.Count} growth metrics for age data");
+            Console.WriteLine(
+                $"[generateGrowthResult] Retrieved {growthMetricsForAgeData.Count} growth metrics for age data"
+            );
 
             var height = growthData.Height;
             var weight = growthData.Weight;
@@ -196,7 +207,9 @@ namespace RestAPI.Services.services
             };
             var irregular = false;
 
-            Console.WriteLine($"[generateGrowthResult] Processing {growthMetricsForAgeData.Count} growth metrics...");
+            Console.WriteLine(
+                $"[generateGrowthResult] Processing {growthMetricsForAgeData.Count} growth metrics..."
+            );
             growthMetricsForAgeData.ForEach(data =>
             {
                 Console.WriteLine($"[generateGrowthResult] Processing metric type: {data.Type}");
@@ -205,7 +218,9 @@ namespace RestAPI.Services.services
                     case GrowthMetricsForAgeEnum.BFA:
                     {
                         var percentile = GetPercentile((double)bmi, data.Percentiles.Values);
-                        Console.WriteLine($"[generateGrowthResult] BMI percentile calculated: {percentile}");
+                        Console.WriteLine(
+                            $"[generateGrowthResult] BMI percentile calculated: {percentile}"
+                        );
                         if (percentile.HasValue)
                         {
                             growthResult!.Bmi!.Percentile = percentile.Value;
@@ -218,23 +233,31 @@ namespace RestAPI.Services.services
                             {
                                 growthResult!.Bmi!.Level = BmiLevelEnum.Underweight;
                                 irregular = true;
-                                Console.WriteLine($"[generateGrowthResult] BMI level set to Underweight (irregular)");
+                                Console.WriteLine(
+                                    $"[generateGrowthResult] BMI level set to Underweight (irregular)"
+                                );
                             }
                             else if (percentile.Value >= 5 && percentile.Value < 15)
                             {
                                 growthResult!.Bmi!.Level = BmiLevelEnum.HealthyWeight;
-                                Console.WriteLine($"[generateGrowthResult] BMI level set to HealthyWeight");
+                                Console.WriteLine(
+                                    $"[generateGrowthResult] BMI level set to HealthyWeight"
+                                );
                             }
                             else if (percentile.Value >= 15 && percentile.Value < 95)
                             {
                                 growthResult!.Bmi!.Level = BmiLevelEnum.Overweight;
-                                Console.WriteLine($"[generateGrowthResult] BMI level set to Overweight");
+                                Console.WriteLine(
+                                    $"[generateGrowthResult] BMI level set to Overweight"
+                                );
                             }
                             else if (percentile.Value >= 95)
                             {
                                 growthResult!.Bmi!.Level = BmiLevelEnum.Obese;
                                 irregular = true;
-                                Console.WriteLine($"[generateGrowthResult] BMI level set to Obese (irregular)");
+                                Console.WriteLine(
+                                    $"[generateGrowthResult] BMI level set to Obese (irregular)"
+                                );
                             }
                         }
                         break;
@@ -242,7 +265,9 @@ namespace RestAPI.Services.services
                     case GrowthMetricsForAgeEnum.LHFA:
                     {
                         var percentile = GetPercentile((double)height!, data.Percentiles.Values);
-                        Console.WriteLine($"[generateGrowthResult] Height percentile calculated: {percentile}");
+                        Console.WriteLine(
+                            $"[generateGrowthResult] Height percentile calculated: {percentile}"
+                        );
                         if (percentile.HasValue)
                         {
                             growthResult!.Height!.Percentile = percentile.Value;
@@ -254,22 +279,30 @@ namespace RestAPI.Services.services
                             if (percentile.Value < 5)
                             {
                                 growthResult!.Height!.Level = LevelEnum.Low;
-                                Console.WriteLine($"[generateGrowthResult] Height level set to Low");
+                                Console.WriteLine(
+                                    $"[generateGrowthResult] Height level set to Low"
+                                );
                             }
                             else if (percentile.Value >= 5 && percentile.Value < 15)
                             {
                                 growthResult!.Height!.Level = LevelEnum.BelowAverage;
-                                Console.WriteLine($"[generateGrowthResult] Height level set to BelowAverage");
+                                Console.WriteLine(
+                                    $"[generateGrowthResult] Height level set to BelowAverage"
+                                );
                             }
                             else if (percentile.Value >= 15 && percentile.Value < 95)
                             {
                                 growthResult!.Height!.Level = LevelEnum.Average;
-                                Console.WriteLine($"[generateGrowthResult] Height level set to Average");
+                                Console.WriteLine(
+                                    $"[generateGrowthResult] Height level set to Average"
+                                );
                             }
                             else if (percentile.Value >= 95)
                             {
                                 growthResult!.Height!.Level = LevelEnum.AboveAverage;
-                                Console.WriteLine($"[generateGrowthResult] Height level set to AboveAverage");
+                                Console.WriteLine(
+                                    $"[generateGrowthResult] Height level set to AboveAverage"
+                                );
                             }
                         }
                         break;
@@ -277,7 +310,9 @@ namespace RestAPI.Services.services
                     case GrowthMetricsForAgeEnum.WFA:
                     {
                         var percentile = GetPercentile((double)weight!, data.Percentiles.Values);
-                        Console.WriteLine($"[generateGrowthResult] Weight percentile calculated: {percentile}");
+                        Console.WriteLine(
+                            $"[generateGrowthResult] Weight percentile calculated: {percentile}"
+                        );
                         if (percentile.HasValue)
                         {
                             growthResult!.Weight!.Percentile = percentile.Value;
@@ -289,23 +324,31 @@ namespace RestAPI.Services.services
                             if (percentile.Value < 5)
                             {
                                 growthResult!.Weight!.Level = LevelEnum.Low;
-                                Console.WriteLine($"[generateGrowthResult] Weight level set to Low");
+                                Console.WriteLine(
+                                    $"[generateGrowthResult] Weight level set to Low"
+                                );
                             }
                             else if (percentile.Value >= 5 && percentile.Value < 15)
                             {
                                 growthResult!.Weight!.Level = LevelEnum.BelowAverage;
-                                Console.WriteLine($"[generateGrowthResult] Weight level set to BelowAverage");
+                                Console.WriteLine(
+                                    $"[generateGrowthResult] Weight level set to BelowAverage"
+                                );
                             }
                             else if (percentile.Value >= 15 && percentile.Value < 95)
                             {
                                 growthResult!.Weight!.Level = LevelEnum.Average;
-                                Console.WriteLine($"[generateGrowthResult] Weight level set to Average");
+                                Console.WriteLine(
+                                    $"[generateGrowthResult] Weight level set to Average"
+                                );
                             }
                             else if (percentile.Value >= 95)
                             {
                                 growthResult!.Weight!.Level = LevelEnum.AboveAverage;
                                 irregular = true;
-                                Console.WriteLine($"[generateGrowthResult] Weight level set to AboveAverage (irregular)");
+                                Console.WriteLine(
+                                    $"[generateGrowthResult] Weight level set to AboveAverage (irregular)"
+                                );
                             }
                         }
                         break;
@@ -315,7 +358,9 @@ namespace RestAPI.Services.services
                         {
                             if (headCircumference == null || headCircumference is not double)
                             {
-                                Console.WriteLine($"[generateGrowthResult] Head circumference is null or not double, setting to N/A");
+                                Console.WriteLine(
+                                    $"[generateGrowthResult] Head circumference is null or not double, setting to N/A"
+                                );
                                 growthResult!.HeadCircumference!.Percentile = -1;
                                 growthResult!.HeadCircumference!.Description = "N/A";
                                 growthResult!.HeadCircumference!.Level = LevelEnum.NA;
@@ -327,7 +372,9 @@ namespace RestAPI.Services.services
                             (double)headCircumference!,
                             data.Percentiles.Values
                         );
-                        Console.WriteLine($"[generateGrowthResult] Head circumference percentile calculated: {percentile}");
+                        Console.WriteLine(
+                            $"[generateGrowthResult] Head circumference percentile calculated: {percentile}"
+                        );
                         if (percentile.HasValue)
                         {
                             growthResult!.HeadCircumference!.Percentile = percentile.Value;
@@ -339,22 +386,30 @@ namespace RestAPI.Services.services
                             if (percentile.Value < 5)
                             {
                                 growthResult!.HeadCircumference!.Level = LevelEnum.Low;
-                                Console.WriteLine($"[generateGrowthResult] Head circumference level set to Low");
+                                Console.WriteLine(
+                                    $"[generateGrowthResult] Head circumference level set to Low"
+                                );
                             }
                             else if (percentile.Value >= 5 && percentile.Value < 15)
                             {
                                 growthResult!.HeadCircumference!.Level = LevelEnum.BelowAverage;
-                                Console.WriteLine($"[generateGrowthResult] Head circumference level set to BelowAverage");
+                                Console.WriteLine(
+                                    $"[generateGrowthResult] Head circumference level set to BelowAverage"
+                                );
                             }
                             else if (percentile.Value >= 15 && percentile.Value < 95)
                             {
                                 growthResult!.HeadCircumference!.Level = LevelEnum.Average;
-                                Console.WriteLine($"[generateGrowthResult] Head circumference level set to Average");
+                                Console.WriteLine(
+                                    $"[generateGrowthResult] Head circumference level set to Average"
+                                );
                             }
                             else if (percentile.Value >= 95)
                             {
                                 growthResult!.HeadCircumference!.Level = LevelEnum.AboveAverage;
-                                Console.WriteLine($"[generateGrowthResult] Head circumference level set to AboveAverage");
+                                Console.WriteLine(
+                                    $"[generateGrowthResult] Head circumference level set to AboveAverage"
+                                );
                             }
                         }
                         break;
@@ -363,7 +418,9 @@ namespace RestAPI.Services.services
                     {
                         if (armCircumference == null || (armCircumference is not double))
                         {
-                            Console.WriteLine($"[generateGrowthResult] Arm circumference is null or not double, setting to N/A");
+                            Console.WriteLine(
+                                $"[generateGrowthResult] Arm circumference is null or not double, setting to N/A"
+                            );
                             growthResult!.ArmCircumference!.Percentile = -1;
                             growthResult!.ArmCircumference!.Description = "N/A";
                             growthResult!.ArmCircumference!.Level = LevelEnum.NA;
@@ -374,7 +431,9 @@ namespace RestAPI.Services.services
                             (double)armCircumference!,
                             data.Percentiles.Values
                         );
-                        Console.WriteLine($"[generateGrowthResult] Arm circumference percentile calculated: {percentile}");
+                        Console.WriteLine(
+                            $"[generateGrowthResult] Arm circumference percentile calculated: {percentile}"
+                        );
                         if (percentile.HasValue)
                         {
                             growthResult!.ArmCircumference!.Percentile = percentile.Value;
@@ -386,22 +445,30 @@ namespace RestAPI.Services.services
                             if (percentile.Value < 5)
                             {
                                 growthResult!.ArmCircumference!.Level = LevelEnum.Low;
-                                Console.WriteLine($"[generateGrowthResult] Arm circumference level set to Low");
+                                Console.WriteLine(
+                                    $"[generateGrowthResult] Arm circumference level set to Low"
+                                );
                             }
                             else if (percentile.Value >= 5 && percentile.Value < 15)
                             {
                                 growthResult!.ArmCircumference!.Level = LevelEnum.BelowAverage;
-                                Console.WriteLine($"[generateGrowthResult] Arm circumference level set to BelowAverage");
+                                Console.WriteLine(
+                                    $"[generateGrowthResult] Arm circumference level set to BelowAverage"
+                                );
                             }
                             else if (percentile.Value >= 15 && percentile.Value < 95)
                             {
                                 growthResult!.ArmCircumference!.Level = LevelEnum.Average;
-                                Console.WriteLine($"[generateGrowthResult] Arm circumference level set to Average");
+                                Console.WriteLine(
+                                    $"[generateGrowthResult] Arm circumference level set to Average"
+                                );
                             }
                             else if (percentile.Value >= 95)
                             {
                                 growthResult!.ArmCircumference!.Level = LevelEnum.AboveAverage;
-                                Console.WriteLine($"[generateGrowthResult] Arm circumference level set to AboveAverage");
+                                Console.WriteLine(
+                                    $"[generateGrowthResult] Arm circumference level set to AboveAverage"
+                                );
                             }
                         }
                         break;
@@ -409,18 +476,24 @@ namespace RestAPI.Services.services
                 }
             });
 
-            Console.WriteLine($"[generateGrowthResult] Fetching WFLH data for height: {height}, gender: {child.Gender}");
+            Console.WriteLine(
+                $"[generateGrowthResult] Fetching WFLH data for height: {height}, gender: {child.Gender}"
+            );
             var wflhData = await _wflhRepository.GetWflhData((double)height!, (int)child.Gender);
-            Console.WriteLine($"[generateGrowthResult] Retrieved {wflhData.Count} WFLH data records");
+            Console.WriteLine(
+                $"[generateGrowthResult] Retrieved {wflhData.Count} WFLH data records"
+            );
 
             wflhData.ForEach(data =>
             {
                 var percentile = GetPercentile((double)weight!, data.Percentiles.Values);
-                Console.WriteLine($"[generateGrowthResult] Weight for length percentile calculated: {percentile}");
+                Console.WriteLine(
+                    $"[generateGrowthResult] Weight for length percentile calculated: {percentile}"
+                );
                 growthResult!.WeightForLength!.Percentile = percentile ?? -1;
                 var genderString = ((GenderEnum)child.Gender == GenderEnum.Boy) ? "boys" : "girls";
                 growthResult!.WeightForLength!.Description =
-                    $"Your child is in the {percentile} percentile for weight for length. That means {percentile} percent of {genderString} at that age have a lower weight for length, while {formatPercentile(100 - percentile??0)} percent have a higher weight for length.";
+                    $"Your child is in the {percentile} percentile for weight for length. That means {percentile} percent of {genderString} at that age have a lower weight for length, while {formatPercentile(100 - percentile ?? 0)} percent have a higher weight for length.";
 
                 if (percentile < 5)
                 {
@@ -430,18 +503,24 @@ namespace RestAPI.Services.services
                 else if (percentile >= 5 && percentile < 15)
                 {
                     growthResult!.WeightForLength!.Level = LevelEnum.BelowAverage;
-                    Console.WriteLine($"[generateGrowthResult] Weight for length level set to BelowAverage");
+                    Console.WriteLine(
+                        $"[generateGrowthResult] Weight for length level set to BelowAverage"
+                    );
                 }
                 else if (percentile >= 15 && percentile < 95)
                 {
                     growthResult!.WeightForLength!.Level = LevelEnum.Average;
-                    Console.WriteLine($"[generateGrowthResult] Weight for length level set to Average");
+                    Console.WriteLine(
+                        $"[generateGrowthResult] Weight for length level set to Average"
+                    );
                 }
                 else if (percentile >= 95)
                 {
                     growthResult!.WeightForLength!.Level = LevelEnum.AboveAverage;
                     irregular = true;
-                    Console.WriteLine($"[generateGrowthResult] Weight for length level set to AboveAverage (irregular)");
+                    Console.WriteLine(
+                        $"[generateGrowthResult] Weight for length level set to AboveAverage (irregular)"
+                    );
                 }
             });
 
@@ -461,10 +540,9 @@ namespace RestAPI.Services.services
             var today = growthData.InputDate.ToUniversalTime().Ticks;
             var birth = birthDate.ToUniversalTime().Ticks;
 
-            decimal diffInTime = today - birth;
-            decimal diffInDays = diffInTime / (1000 * 3600 * 24);
-            decimal diffInWeeks = diffInDays / 7;
-            decimal diffInMonths = diffInDays / (decimal)conversionRate;
+            var diffInDays = TimeSpan.FromTicks(today - birth).TotalDays;
+            var diffInWeeks = diffInDays / 7;
+            var diffInMonths = diffInDays / conversionRate;
 
             var ageInDays = Math.Round(diffInDays);
             var ageInWeeks = Math.Round(diffInWeeks);
@@ -548,7 +626,7 @@ namespace RestAPI.Services.services
                         var genderString =
                             ((GenderEnum)gender == GenderEnum.Boy) ? "boys" : "girls";
                         growthResult!.Bmi!.Description =
-                            $"Your child is in the {percentile} percentile for BMI. That means {percentile} percent of {genderString} at that age have a lower BMI, while {formatPercentile(100 - percentile??0)} percent have a higher BMI.";
+                            $"Your child is in the {percentile} percentile for BMI. That means {percentile} percent of {genderString} at that age have a lower BMI, while {formatPercentile(100 - percentile ?? 0)} percent have a higher BMI.";
 
                         if (percentile < 5)
                         {
@@ -573,7 +651,9 @@ namespace RestAPI.Services.services
                     case GrowthMetricsForAgeEnum.LHFA:
                     {
                         var percentile = GetPercentile((double)height!, data.Percentiles.Values);
-                        Console.WriteLine($"[generateGrowthResult] Height percentile calculated: {percentile}");
+                        Console.WriteLine(
+                            $"[generateGrowthResult] Height percentile calculated: {percentile}"
+                        );
                         if (percentile.HasValue)
                         {
                             growthResult!.Height!.Percentile = percentile.Value;
@@ -585,22 +665,30 @@ namespace RestAPI.Services.services
                             if (percentile.Value < 5)
                             {
                                 growthResult!.Height!.Level = LevelEnum.Low;
-                                Console.WriteLine($"[generateGrowthResult] Height level set to Low");
+                                Console.WriteLine(
+                                    $"[generateGrowthResult] Height level set to Low"
+                                );
                             }
                             else if (percentile.Value >= 5 && percentile.Value < 15)
                             {
                                 growthResult!.Height!.Level = LevelEnum.BelowAverage;
-                                Console.WriteLine($"[generateGrowthResult] Height level set to BelowAverage");
+                                Console.WriteLine(
+                                    $"[generateGrowthResult] Height level set to BelowAverage"
+                                );
                             }
                             else if (percentile.Value >= 15 && percentile.Value < 95)
                             {
                                 growthResult!.Height!.Level = LevelEnum.Average;
-                                Console.WriteLine($"[generateGrowthResult] Height level set to Average");
+                                Console.WriteLine(
+                                    $"[generateGrowthResult] Height level set to Average"
+                                );
                             }
                             else if (percentile.Value >= 95)
                             {
                                 growthResult!.Height!.Level = LevelEnum.AboveAverage;
-                                Console.WriteLine($"[generateGrowthResult] Height level set to AboveAverage");
+                                Console.WriteLine(
+                                    $"[generateGrowthResult] Height level set to AboveAverage"
+                                );
                             }
                         }
                         break;
@@ -608,7 +696,9 @@ namespace RestAPI.Services.services
                     case GrowthMetricsForAgeEnum.WFA:
                     {
                         var percentile = GetPercentile((double)weight!, data.Percentiles.Values);
-                        Console.WriteLine($"[generateGrowthResult] Weight percentile calculated: {percentile}");
+                        Console.WriteLine(
+                            $"[generateGrowthResult] Weight percentile calculated: {percentile}"
+                        );
                         if (percentile.HasValue)
                         {
                             growthResult!.Weight!.Percentile = percentile.Value;
@@ -620,23 +710,31 @@ namespace RestAPI.Services.services
                             if (percentile.Value < 5)
                             {
                                 growthResult!.Weight!.Level = LevelEnum.Low;
-                                Console.WriteLine($"[generateGrowthResult] Weight level set to Low");
+                                Console.WriteLine(
+                                    $"[generateGrowthResult] Weight level set to Low"
+                                );
                             }
                             else if (percentile.Value >= 5 && percentile.Value < 15)
                             {
                                 growthResult!.Weight!.Level = LevelEnum.BelowAverage;
-                                Console.WriteLine($"[generateGrowthResult] Weight level set to BelowAverage");
+                                Console.WriteLine(
+                                    $"[generateGrowthResult] Weight level set to BelowAverage"
+                                );
                             }
                             else if (percentile.Value >= 15 && percentile.Value < 95)
                             {
                                 growthResult!.Weight!.Level = LevelEnum.Average;
-                                Console.WriteLine($"[generateGrowthResult] Weight level set to Average");
+                                Console.WriteLine(
+                                    $"[generateGrowthResult] Weight level set to Average"
+                                );
                             }
                             else if (percentile.Value >= 95)
                             {
                                 growthResult!.Weight!.Level = LevelEnum.AboveAverage;
                                 irregular = true;
-                                Console.WriteLine($"[generateGrowthResult] Weight level set to AboveAverage (irregular)");
+                                Console.WriteLine(
+                                    $"[generateGrowthResult] Weight level set to AboveAverage (irregular)"
+                                );
                             }
                         }
                         break;
@@ -657,11 +755,11 @@ namespace RestAPI.Services.services
                             (double)headCircumference!,
                             data.Percentiles.Values
                         );
-                        growthResult!.HeadCircumference!.Percentile = percentile??-1;
+                        growthResult!.HeadCircumference!.Percentile = percentile ?? -1;
                         var genderString =
                             ((GenderEnum)gender == GenderEnum.Boy) ? "boys" : "girls";
                         growthResult!.HeadCircumference!.Description =
-                            $"Your child is in the {percentile} percentile for head circumference. That means {percentile} percent of {genderString} at that age have a smaller head, while {formatPercentile(100 - percentile??0)} percent have a larger head.";
+                            $"Your child is in the {percentile} percentile for head circumference. That means {percentile} percent of {genderString} at that age have a smaller head, while {formatPercentile(100 - percentile ?? 0)} percent have a larger head.";
 
                         if (percentile < 5)
                         {
@@ -694,11 +792,11 @@ namespace RestAPI.Services.services
                             (double)armCircumference!,
                             data.Percentiles.Values
                         );
-                        growthResult!.ArmCircumference!.Percentile = percentile??-1;
+                        growthResult!.ArmCircumference!.Percentile = percentile ?? -1;
                         var genderString =
                             ((GenderEnum)gender == GenderEnum.Boy) ? "boys" : "girls";
                         growthResult!.ArmCircumference!.Description =
-                            $"Your child is in the {percentile} percentile for arm circumference. That means {percentile} percent of {genderString} at that age have a smaller arm, while {formatPercentile(100 - percentile??0)} percent have a larger arm.";
+                            $"Your child is in the {percentile} percentile for arm circumference. That means {percentile} percent of {genderString} at that age have a smaller arm, while {formatPercentile(100 - percentile ?? 0)} percent have a larger arm.";
 
                         if (percentile < 5)
                         {
@@ -724,10 +822,10 @@ namespace RestAPI.Services.services
             wflhData.ForEach(data =>
             {
                 var percentile = GetPercentile((double)weight!, data.Percentiles.Values);
-                growthResult!.WeightForLength!.Percentile = percentile??-1;
+                growthResult!.WeightForLength!.Percentile = percentile ?? -1;
                 var genderString = ((GenderEnum)gender == GenderEnum.Boy) ? "boys" : "girls";
                 growthResult!.WeightForLength!.Description =
-                    $"Your child is in the {percentile} percentile for weight for length. That means {percentile} percent of {genderString} at that age have a lower weight for length, while {formatPercentile(100 - percentile??0)} percent have a higher weight for length.";
+                    $"Your child is in the {percentile} percentile for weight for length. That means {percentile} percent of {genderString} at that age have a lower weight for length, while {formatPercentile(100 - percentile ?? 0)} percent have a higher weight for length.";
 
                 if (percentile < 5)
                 {
@@ -1025,7 +1123,6 @@ namespace RestAPI.Services.services
                 };
                 var createdGrowthData = await _growthDataRepository.CreateAsync(newGrowthData);
                 var growthVelocity = await generateGrowthVelocityByChildId(requesterInfo, childId);
-         
 
                 return (createdGrowthData, growthVelocity);
             }
@@ -1044,7 +1141,19 @@ namespace RestAPI.Services.services
             {
                 var requesterId = requesterInfo.UserId;
                 var requesterRole = requesterInfo.Role;
-                var user = await _userRepository.GetByIdAsync(requesterId);
+                var user = await _userRepository.GetByIdAsync(
+                    requesterId,
+                    new PopulationModel[]
+                    {
+                        new PopulationModel
+                        {
+                            LocalField = "childId",
+                            ForeignField = "_id",
+                            Collection = "children",
+                            As = "child",
+                        },
+                    }
+                );
                 if (user == null)
                 {
                     throw new KeyNotFoundException("User not found");

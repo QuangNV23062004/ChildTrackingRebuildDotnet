@@ -6,7 +6,6 @@ using RestAPI.Models.SubModels;
 
 namespace RestAPI.Models;
 
-
 public class ChildModel : BaseModel
 {
     [BsonId]
@@ -40,6 +39,6 @@ public class ChildModel : BaseModel
 
     public List<GrowthVelocityResult> GrowthVelocityResult { get; set; } = new();
 
-
-
+    [BsonElement("guardian")]
+    public UserModel? Guardian { get; set; }
 }

@@ -1,15 +1,17 @@
 using System;
+using MongoDB.Bson;
 using RestAPI.Enums;
 using RestAPI.Helpers;
 using RestAPI.Models;
+using RestAPI.Models.SubModels;
 using RestAPI.Repositories.interfaces;
 using RestAPI.Repositories.repositories;
 using RestAPI.Services.interfaces;
-using MongoDB.Bson;
 
 namespace RestAPI.Services.services;
 
-public class ChildService(IChildRepository _childRepository, IUserRepository _userRepository) : IChildService
+public class ChildService(IChildRepository _childRepository, IUserRepository _userRepository)
+    : IChildService
 {
     public async Task<ChildModel> CreateChildAsync(UserInfo requesterInfo, ChildModel childData)
     {
@@ -21,24 +23,38 @@ public class ChildService(IChildRepository _childRepository, IUserRepository _us
             }
             if (requesterInfo == null)
             {
-                throw new ArgumentNullException(nameof(requesterInfo), "Requester info cannot be null");
+                throw new ArgumentNullException(
+                    nameof(requesterInfo),
+                    "Requester info cannot be null"
+                );
             }
             childData.Id = ObjectId.GenerateNewId().ToString();
             childData.GuardianId = requesterInfo.UserId;
             return await _childRepository.CreateAsync(childData);
-
         }
         catch (System.Exception)
         {
-
             throw;
         }
     }
+
     public async Task<ChildModel?> GetChildByIdAsync(string childId, UserInfo requesterInfo)
     {
         try
         {
-            var child = await _childRepository.GetByIdAsync(childId);
+            var child = await _childRepository.GetByIdAsync(
+                childId,
+                new PopulationModel[]
+                {
+                    new PopulationModel
+                    {
+                        LocalField = "guardianId",
+                        ForeignField = "_id",
+                        Collection = "users",
+                        As = "guardian",
+                    },
+                }
+            );
             if (child == null)
             {
                 throw new KeyNotFoundException("Child with the specified id does not exist");
@@ -48,12 +64,15 @@ public class ChildService(IChildRepository _childRepository, IUserRepository _us
         }
         catch (System.Exception)
         {
-
             throw;
         }
     }
 
-    public async Task<PaginationResult<ChildModel>> GetChildrenByUserIdAsync(string userId, UserInfo requesterInfo, QueryParams query)
+    public async Task<PaginationResult<ChildModel>> GetChildrenByUserIdAsync(
+        string userId,
+        UserInfo requesterInfo,
+        QueryParams query
+    )
     {
         var checkUser = await _userRepository.GetByIdAsync(requesterInfo.UserId);
         if (checkUser == null)
@@ -66,23 +85,36 @@ public class ChildService(IChildRepository _childRepository, IUserRepository _us
 
         if (!isAdmin && !isSelf)
         {
-            throw new UnauthorizedAccessException("You do not have permission to access this resource");
+            throw new UnauthorizedAccessException(
+                "You do not have permission to access this resource"
+            );
         }
 
         var children = await _childRepository.GetChildrenByUserId(userId, query);
         return children;
     }
+
     public async Task<ChildModel?> DeleteChildAsync(string childId, UserInfo requesterInfo)
     {
-
         try
         {
-            var checkUser = await _userRepository.GetByIdAsync(requesterInfo.UserId);
+            var checkUser = await _userRepository.GetByIdAsync(
+                requesterInfo.UserId,
+                new PopulationModel[]
+                {
+                    new PopulationModel
+                    {
+                        LocalField = "guardianId",
+                        ForeignField = "_id",
+                        Collection = "users",
+                        As = "guardian",
+                    },
+                }
+            );
             if (checkUser == null)
             {
                 throw new KeyNotFoundException("User with the specified id does not exist");
             }
-
 
             var child = await _childRepository.GetByIdAsync(childId);
             if (child == null)
@@ -94,7 +126,9 @@ public class ChildService(IChildRepository _childRepository, IUserRepository _us
 
             if (!isAdmin && !isSelf)
             {
-                throw new UnauthorizedAccessException("You do not have permission to perform this action");
+                throw new UnauthorizedAccessException(
+                    "You do not have permission to perform this action"
+                );
             }
 
             var deletedChild = await _childRepository.DeleteAsync(childId);
@@ -102,12 +136,15 @@ public class ChildService(IChildRepository _childRepository, IUserRepository _us
         }
         catch (System.Exception)
         {
-
             throw;
         }
     }
 
-    public async Task<ChildModel?> UpdateChildAsync(string childId, UserInfo requesterInfo, ChildModel updateData)
+    public async Task<ChildModel?> UpdateChildAsync(
+        string childId,
+        UserInfo requesterInfo,
+        ChildModel updateData
+    )
     {
         try
         {
@@ -116,7 +153,6 @@ public class ChildService(IChildRepository _childRepository, IUserRepository _us
             {
                 throw new KeyNotFoundException("User with the specified id does not exist");
             }
-
 
             var child = await _childRepository.GetByIdAsync(childId);
             if (child == null)
@@ -128,15 +164,15 @@ public class ChildService(IChildRepository _childRepository, IUserRepository _us
 
             if (!isAdmin && !isSelf)
             {
-                throw new UnauthorizedAccessException("You do not have permission to perform this action");
+                throw new UnauthorizedAccessException(
+                    "You do not have permission to perform this action"
+                );
             }
             var updatedChild = await _childRepository.UpdateAsync(childId, updateData);
             return updatedChild;
-
         }
         catch (System.Exception)
         {
-
             throw;
         }
     }

@@ -17,7 +17,10 @@ namespace RestAPI.Controllers
     {
         [HttpPost]
         [Authorize(Roles = "User,Admin")]
-        public async Task<IActionResult> CreateGrowthData([FromBody] GrowthDataDto.CreateGrowthDataDto growthDataDto, string childId)
+        public async Task<IActionResult> CreateGrowthData(
+            [FromBody] GrowthDataDto.CreateGrowthDataDto growthDataDto,
+            string childId
+        )
         {
             try
             {
@@ -31,24 +34,29 @@ namespace RestAPI.Controllers
                     ArmCircumference = growthDataDto.ArmCircumference,
                     InputDate = growthDataDto.InputDate,
                 };
-                var (createdGrowthData, growthVelocity) = await _growthDataService.CreateGrowthDataAsync(requester!, childId, growthData);
-                return Ok(new 
-                { 
-                    growthData = createdGrowthData,
-                    growthVelocity = growthVelocity,
-                    message = "Growth data created successfully",
-                });
+                var (createdGrowthData, growthVelocity) =
+                    await _growthDataService.CreateGrowthDataAsync(requester!, childId, growthData);
+                return Ok(
+                    new
+                    {
+                        growthData = createdGrowthData,
+                        growthVelocity = growthVelocity,
+                        message = "Growth data created successfully",
+                    }
+                );
             }
             catch (System.Exception)
             {
-                
                 throw;
             }
         }
 
         [HttpPut("{id}")]
         [Authorize(Roles = "User,Admin")]
-        public async Task<IActionResult> UpdateGrowthData(string id, [FromBody] GrowthDataDto.UpdateGrowthDataDto growthDataDto)
+        public async Task<IActionResult> UpdateGrowthData(
+            string id,
+            [FromBody] GrowthDataDto.UpdateGrowthDataDto growthDataDto
+        )
         {
             try
             {
@@ -58,23 +66,28 @@ namespace RestAPI.Controllers
                 {
                     Height = growthDataDto.Height,
                     Weight = growthDataDto.Weight,
-                    HeadCircumference = growthDataDto.HeadCircumference ,
-                    ArmCircumference = growthDataDto.ArmCircumference ,
+                    HeadCircumference = growthDataDto.HeadCircumference,
+                    ArmCircumference = growthDataDto.ArmCircumference,
                     InputDate = growthDataDto.InputDate,
                 };
-                var updatedGrowthData = await _growthDataService.UpdateGrowthDataAsync(id,  requester!, growthData);
-                return Ok(new 
-                {
-                    growthData = updatedGrowthData,
-                    message = "Growth data updated successfully",
-                });
+                var updatedGrowthData = await _growthDataService.UpdateGrowthDataAsync(
+                    id,
+                    requester!,
+                    growthData
+                );
+                return StatusCode(
+                    StatusCodes.Status201Created,
+                    new
+                    {
+                        growthData = updatedGrowthData,
+                        message = "Growth data updated successfully",
+                    }
+                );
             }
             catch (System.Exception)
             {
-                
                 throw;
             }
-            
         }
 
         [HttpDelete("{id}")]
@@ -84,19 +97,22 @@ namespace RestAPI.Controllers
             try
             {
                 var requester = HttpContext.Items["UserInfo"] as UserInfo;
-                var deletedGrowthData = await _growthDataService.DeleteGrowthDataAsync(id, requester!);
-                return Ok(new 
-                {
-                    growthData = deletedGrowthData,
-                    message = "Growth data deleted successfully",
-                });
+                var deletedGrowthData = await _growthDataService.DeleteGrowthDataAsync(
+                    id,
+                    requester!
+                );
+                return Ok(
+                    new
+                    {
+                        growthData = deletedGrowthData,
+                        message = "Growth data deleted successfully",
+                    }
+                );
             }
             catch (System.Exception)
             {
-                
                 throw;
             }
-            
         }
 
         [HttpGet("{id}")]
@@ -107,37 +123,37 @@ namespace RestAPI.Controllers
             {
                 var requester = HttpContext.Items["UserInfo"] as UserInfo;
                 var growthData = await _growthDataService.GetGrowthDataByIdAsync(id, requester!);
-                return Ok(new 
-                {
-                    growthData = growthData,
-                    message = "Growth data fetched successfully",
-                });
+                return Ok(
+                    new { growthData = growthData, message = "Growth data fetched successfully" }
+                );
             }
             catch (System.Exception)
             {
-                
                 throw;
             }
-            
         }
 
         [HttpGet("child/{id}")]
         [Authorize(Roles = "User,Admin,Doctor")]
-        public async Task<IActionResult> GetGrowthDataByChildId(string id,[FromQuery] QueryParams query)
+        public async Task<IActionResult> GetGrowthDataByChildId(
+            string id,
+            [FromQuery] QueryParams query
+        )
         {
             try
             {
                 var requester = HttpContext.Items["UserInfo"] as UserInfo;
-                var growthData = await _growthDataService.GetGrowthDataByChildIdAsync(id, requester!, query);
-                return Ok(new 
-                {
-                    growthData = growthData,
-                    message = "Growth data fetched successfully",
-                });
+                var growthData = await _growthDataService.GetGrowthDataByChildIdAsync(
+                    id,
+                    requester!,
+                    query
+                );
+                return Ok(
+                    new { growthData = growthData, message = "Growth data fetched successfully" }
+                );
             }
             catch (System.Exception)
             {
-                
                 throw;
             }
         }
@@ -149,38 +165,56 @@ namespace RestAPI.Controllers
             try
             {
                 var requester = HttpContext.Items["UserInfo"] as UserInfo;
-                var growthVelocity = await _growthDataService.generateGrowthVelocityByChildId(requester!, id);
-                return Ok(new 
-                {
-                    growthVelocity = growthVelocity,
-                    message = "Growth velocity fetched successfully",
-                });
+                var growthVelocity = await _growthDataService.generateGrowthVelocityByChildId(
+                    requester!,
+                    id
+                );
+                return Ok(
+                    new
+                    {
+                        growthVelocity = growthVelocity,
+                        message = "Growth velocity fetched successfully",
+                    }
+                );
             }
             catch (System.Exception)
             {
-                
                 throw;
             }
         }
 
         [HttpPost("public")]
-        public async Task<IActionResult> PublicGenerateGrowthData([FromBody] GrowthDataModel growthData, DateTime birthDate, int gender)
+        public async Task<IActionResult> PublicGenerateGrowthData(
+            GrowthDataDto.PublicCreateGrowthDataDto growthDataDto
+        )
         {
             try
             {
-                var currentGrowthData = await _growthDataService.PublicGenerateGrowthDataAsync(growthData, birthDate, gender);
-                return Ok(new 
+                var growthData = new GrowthDataModel
                 {
-                    growthData = currentGrowthData,
-                    message = "Growth data fetched successfully",
-                });
+                    Height = growthDataDto.Height,
+                    Weight = growthDataDto.Weight,
+                    HeadCircumference = growthDataDto.HeadCircumference,
+                    ArmCircumference = growthDataDto.ArmCircumference,
+                    InputDate = growthDataDto.InputDate,
+                };
+                var currentGrowthData = await _growthDataService.PublicGenerateGrowthDataAsync(
+                    growthData,
+                    growthDataDto.BirthDate,
+                    growthDataDto.Gender
+                );
+                return Ok(
+                    new
+                    {
+                        growthData = currentGrowthData,
+                        message = "Growth data fetched successfully",
+                    }
+                );
             }
             catch (System.Exception)
             {
-                
                 throw;
             }
         }
-        
     }
 }

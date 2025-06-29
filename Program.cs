@@ -1,17 +1,17 @@
-using Microsoft.EntityFrameworkCore;
-using RestAPI.Repositories.interfaces;
-using RestAPI.Repositories.repositories;
-using RestAPI.Repositories.database;
-using RestAPI.Services.interfaces;
-using RestAPI.Services.services;
+using System.Text;
 using DotNetEnv;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Options;
 using Microsoft.IdentityModel.Tokens;
-using System.Text;
 using Microsoft.OpenApi.Models;
 using MongoDB.Driver;
-using Microsoft.Extensions.Options;
 using RestAPI.Middlewares;
+using RestAPI.Repositories.database;
+using RestAPI.Repositories.interfaces;
+using RestAPI.Repositories.repositories;
+using RestAPI.Services.interfaces;
+using RestAPI.Services.services;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -25,16 +25,28 @@ builder.Services.AddScoped<IGrowthDataRepository, GrowthDataRepository>();
 builder.Services.AddScoped<IGrowthMetricForAgeRepository, GrowthMetricsForAgeRepository>();
 builder.Services.AddScoped<IGrowthVelocitoryRepository, GrowthVelocityRepository>();
 builder.Services.AddScoped<IWflhRepository, WflhRepository>();
+builder.Services.AddScoped<IRequestRepository, RequestRepository>();
+builder.Services.AddScoped<IConsultationRepository, ConsultationRepository>();
+builder.Services.AddScoped<IConsultationMessageRepository, ConsultationMessageRepository>();
 builder.Services.AddScoped<IUserService, UserService>();
 builder.Services.AddScoped<IAuthService, AuthService>();
 builder.Services.AddScoped<IChildService, ChildService>();
 builder.Services.AddScoped<IGrowthDataService, GrowthDataService>();
+builder.Services.AddScoped<IRequestService, RequestService>();
+builder.Services.AddScoped<IConsultationService, ConsultationService>();
+builder.Services.AddScoped<IConsultationMessageService, ConsultationMessageService>();
 
 // MongoDB Configuration
 builder.Services.Configure<MongoDBSettings>(options =>
 {
-    options.ConnectionString = Environment.GetEnvironmentVariable("DATABASE_URI") ?? throw new InvalidOperationException("DATABASE_URI not configured"); ;
-    options.DatabaseName = Environment.GetEnvironmentVariable("DATABASE_NAME") ?? throw new InvalidOperationException("DATABASE_NAME not configured"); ;
+    options.ConnectionString =
+        Environment.GetEnvironmentVariable("DATABASE_URI")
+        ?? throw new InvalidOperationException("DATABASE_URI not configured");
+    ;
+    options.DatabaseName =
+        Environment.GetEnvironmentVariable("DATABASE_NAME")
+        ?? throw new InvalidOperationException("DATABASE_NAME not configured");
+    ;
 });
 
 // Register IMongoClient as a singleton to reuse across repositories
@@ -61,43 +73,52 @@ builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen(opt =>
 {
     opt.SwaggerDoc("v1", new OpenApiInfo { Title = "MyAPI", Version = "v1" });
-    opt.AddSecurityDefinition("Bearer", new OpenApiSecurityScheme
-    {
-        In = ParameterLocation.Header,
-        Description = "Please enter token",
-        Name = "Authorization",
-        Type = SecuritySchemeType.Http,
-        BearerFormat = "JWT",
-        Scheme = "bearer"
-    });
-    opt.AddSecurityRequirement(new OpenApiSecurityRequirement
-    {
+    opt.AddSecurityDefinition(
+        "Bearer",
+        new OpenApiSecurityScheme
         {
-            new OpenApiSecurityScheme
-            {
-                Reference = new OpenApiReference
-                {
-                    Type=ReferenceType.SecurityScheme,
-                    Id="Bearer"
-                }
-            },
-            new string[]{}
+            In = ParameterLocation.Header,
+            Description = "Please enter token",
+            Name = "Authorization",
+            Type = SecuritySchemeType.Http,
+            BearerFormat = "JWT",
+            Scheme = "bearer",
         }
-    });
+    );
+    opt.AddSecurityRequirement(
+        new OpenApiSecurityRequirement
+        {
+            {
+                new OpenApiSecurityScheme
+                {
+                    Reference = new OpenApiReference
+                    {
+                        Type = ReferenceType.SecurityScheme,
+                        Id = "Bearer",
+                    },
+                },
+                new string[] { }
+            },
+        }
+    );
 });
 
 // JWT Authentication Configuration
-builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
+builder
+    .Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
     .AddJwtBearer(options =>
     {
         // Validate environment variables
-        var issuer = Environment.GetEnvironmentVariable("JWT_ISSUER")
+        var issuer =
+            Environment.GetEnvironmentVariable("JWT_ISSUER")
             ?? throw new InvalidOperationException("JWT_ISSUER not configured");
 
-        var audience = Environment.GetEnvironmentVariable("JWT_AUDIENCE")
+        var audience =
+            Environment.GetEnvironmentVariable("JWT_AUDIENCE")
             ?? throw new InvalidOperationException("JWT_AUDIENCE not configured");
 
-        var secret = Environment.GetEnvironmentVariable("JWT_SECRET")
+        var secret =
+            Environment.GetEnvironmentVariable("JWT_SECRET")
             ?? throw new InvalidOperationException("JWT_SECRET not configured");
 
         options.TokenValidationParameters = new TokenValidationParameters
@@ -107,19 +128,20 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
             ValidateAudience = true,
             ValidAudience = audience,
             ValidateLifetime = true,
-            IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(secret))
+            IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(secret)),
         };
     });
 
 // CORS configuration
 builder.Services.AddCors(options =>
 {
-    options.AddPolicy("AllowAll", policy =>
-    {
-        policy.AllowAnyOrigin()
-              .AllowAnyMethod()
-              .AllowAnyHeader();
-    });
+    options.AddPolicy(
+        "AllowAll",
+        policy =>
+        {
+            policy.AllowAnyOrigin().AllowAnyMethod().AllowAnyHeader();
+        }
+    );
 });
 
 var app = builder.Build();
@@ -144,7 +166,7 @@ app.UseRouting();
 // Authentication & Authorization
 app.UseAuthentication();
 app.UseAuthorization();
-app.UseMiddleware<UserInfoMiddleware>(); 
+app.UseMiddleware<UserInfoMiddleware>();
 
 app.MapControllers();
 

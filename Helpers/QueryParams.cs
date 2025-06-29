@@ -14,5 +14,4 @@ public class QueryParams
 
     // Optional: store all extra dynamic keys if needed
     public Dictionary<string, object>? Extra { get; set; }
-
 }

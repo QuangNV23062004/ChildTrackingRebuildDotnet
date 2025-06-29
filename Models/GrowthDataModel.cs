@@ -24,7 +24,7 @@ namespace RestAPI.Models
         High,
 
         [BsonRepresentation(BsonType.String)]
-        NA
+        NA,
     }
 
     // Enum for BmiLevelEnum, serialized as string in MongoDB
@@ -43,7 +43,7 @@ namespace RestAPI.Models
         Obese,
 
         [BsonRepresentation(BsonType.String)]
-        NA
+        NA,
     }
 
     public class GrowthResult
@@ -131,6 +131,8 @@ namespace RestAPI.Models
 
         [BsonElement("growthResult")]
         public GrowthResult? GrowthResult { get; set; }
-    }
 
+        [BsonElement("child")]
+        public ChildModel? Child { get; set; }
+    }
 }

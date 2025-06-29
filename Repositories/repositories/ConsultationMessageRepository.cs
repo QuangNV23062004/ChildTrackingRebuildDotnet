@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using Microsoft.Extensions.Options;
 using MongoDB.Bson;
 using MongoDB.Bson.Serialization;
 using MongoDB.Driver;
@@ -12,28 +13,15 @@ using RestAPI.Repositories.interfaces;
 
 namespace RestAPI.Repositories.repositories
 {
-    public class GrowthDataRepository : Repository<GrowthDataModel>, IGrowthDataRepository
+    public class ConsultationMessageRepository
+        : Repository<ConsultationMessageModel>,
+            IConsultationMessageRepository
     {
-        public GrowthDataRepository(Microsoft.Extensions.Options.IOptions<MongoDBSettings> settings)
+        public ConsultationMessageRepository(IOptions<MongoDBSettings> settings)
             : base(settings) { }
 
-        public async Task<GrowthDataModel[]> GetAllGrowthDataByChildId(string id)
-        {
-            try
-            {
-                var data = await _collection
-                    .Find(x => x.ChildId == id && x.IsDeleted == false)
-                    .ToListAsync();
-                return data.ToArray();
-            }
-            catch (System.Exception)
-            {
-                throw;
-            }
-        }
-
-        public async Task<PaginationResult<GrowthDataModel>> GetGrowthDataByChildId(
-            string id,
+        public async Task<PaginationResult<ConsultationMessageModel>> GetConsultationMessages(
+            string consultationId,
             QueryParams query
         )
         {
@@ -45,22 +33,21 @@ namespace RestAPI.Repositories.repositories
 
                 var facetPipeline = new List<BsonDocument>
                 {
-                    // Common stages
                     new BsonDocument(
                         "$lookup",
                         new BsonDocument
                         {
-                            ["from"] = "children",
-                            ["localField"] = "childId",
+                            ["from"] = "users",
+                            ["localField"] = "senderId",
                             ["foreignField"] = "_id",
-                            ["as"] = "child",
+                            ["as"] = "sender",
                         }
                     ),
                     new BsonDocument(
                         "$unwind",
                         new BsonDocument
                         {
-                            ["path"] = "$child",
+                            ["path"] = "$sender",
                             ["preserveNullAndEmptyArrays"] = true,
                         }
                     ),
@@ -68,22 +55,21 @@ namespace RestAPI.Repositories.repositories
                         "$match",
                         new BsonDocument
                         {
-                            ["childId"] = new BsonObjectId(ObjectId.Parse(id)),
+                            ["consultationId"] = new BsonObjectId(ObjectId.Parse(consultationId)),
                             ["isDeleted"] = false,
                         }
                     ),
-                    // Facet stage to split into count and data
                     new BsonDocument(
                         "$facet",
                         new BsonDocument
                         {
-                            ["count"] = new BsonArray { new BsonDocument("$count", "total") },
                             ["data"] = new BsonArray
                             {
                                 new BsonDocument("$sort", new BsonDocument { ["createdAt"] = -1 }),
                                 new BsonDocument("$skip", skip),
                                 new BsonDocument("$limit", size),
                             },
+                            ["count"] = new BsonArray { new BsonDocument("$count", "total") },
                         }
                     ),
                 };
@@ -91,14 +77,17 @@ namespace RestAPI.Repositories.repositories
                 var facetResult = await _collection
                     .Aggregate<BsonDocument>(facetPipeline)
                     .FirstOrDefaultAsync();
+
                 var total =
                     facetResult?["count"]?.AsBsonArray.FirstOrDefault()?["total"].AsInt32 ?? 0;
                 var dataArray = facetResult?["data"]?.AsBsonArray ?? new BsonArray();
                 var data = dataArray
-                    .Select(doc => BsonSerializer.Deserialize<GrowthDataModel>(doc.AsBsonDocument))
+                    .Select(doc =>
+                        BsonSerializer.Deserialize<ConsultationMessageModel>(doc.AsBsonDocument)
+                    )
                     .ToList();
 
-                return new PaginationResult<GrowthDataModel>
+                return new PaginationResult<ConsultationMessageModel>
                 {
                     Data = data,
                     Page = page,
