@@ -36,7 +36,7 @@ namespace RestAPI.Services.services
                     "blogAttachments"
                 );
             }
-            var createdBlog = new BlogModel();
+
             blog.ImageUrl = uploadedImageUrl;
             blog.ContentImageUrls = uploadedAttachments;
             blog.Content = CloudinaryHelper.FormatBlogContent(blog.Content, uploadedAttachments);
