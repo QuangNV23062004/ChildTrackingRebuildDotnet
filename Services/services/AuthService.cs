@@ -6,6 +6,7 @@ using System.Text;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.IdentityModel.Tokens;
 using MongoDB.Bson;
+using RestAPI.Helpers;
 using RestAPI.Models;
 using RestAPI.Repositories.interfaces;
 using RestAPI.Repositories.repositories;
@@ -18,17 +19,19 @@ public class AuthService(IUserRepository _userRepository) : IAuthService
 {
     private string GenerateJsonWebToken(UserModel user)
     {
-
         var claims = new List<Claim>
+        {
+            new Claim(ClaimTypes.Name, user.Name),
+            new Claim("userId", user.Id?.ToString() ?? ""),
+            new Claim("role", user.Role ?? "User"),
+            new Claim("position", user.Role ?? "User"),
+        };
 
-    {
-        new Claim(ClaimTypes.Name, user.Name),
-        new Claim("userId", user.Id?.ToString() ?? ""),
-        new Claim("role", user.Role ?? "User"),
-        new Claim("position", user.Role ?? "User"),
-    };
-
-        var jwtSecret = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(Environment.GetEnvironmentVariable("JWT_SECRET")!)) ?? throw new ArgumentNullException("JWT_SECRET is not configured"); ;
+        var jwtSecret =
+            new SymmetricSecurityKey(
+                Encoding.UTF8.GetBytes(Environment.GetEnvironmentVariable("JWT_SECRET")!)
+            ) ?? throw new ArgumentNullException("JWT_SECRET is not configured");
+        ;
         var creds = new SigningCredentials(jwtSecret, SecurityAlgorithms.HmacSha512);
 
         var issuer = Environment.GetEnvironmentVariable("JWT_ISSUER") ?? "default_issuer";
@@ -41,7 +44,7 @@ public class AuthService(IUserRepository _userRepository) : IAuthService
             claims: claims,
             expires: DateTime.UtcNow.AddDays(Int32.Parse(expiresDays)),
             signingCredentials: creds
-            );
+        );
 
         return new JwtSecurityTokenHandler().WriteToken(TokenProviderDescriptor);
     }
@@ -64,11 +67,9 @@ public class AuthService(IUserRepository _userRepository) : IAuthService
             user.Id = ObjectId.GenerateNewId().ToString();
             user.Password = new PasswordHasher<UserModel>().HashPassword(user, user.Password);
             return await _userRepository.CreateAsync(user);
-
         }
         catch (Exception)
         {
-
             throw;
         }
     }
@@ -77,8 +78,15 @@ public class AuthService(IUserRepository _userRepository) : IAuthService
     {
         try
         {
-            var _user = await _userRepository.GetUserByEmail(email) ?? throw new Exception("User not found");
-            bool isCorrectPassword = new PasswordHasher<UserModel>().VerifyHashedPassword(_user, _user.Password, password) == PasswordVerificationResult.Success;
+            var _user =
+                await _userRepository.GetUserByEmail(email)
+                ?? throw new Exception("User not found");
+            bool isCorrectPassword =
+                new PasswordHasher<UserModel>().VerifyHashedPassword(
+                    _user,
+                    _user.Password,
+                    password
+                ) == PasswordVerificationResult.Success;
 
             if (!isCorrectPassword)
             {
@@ -91,6 +99,23 @@ public class AuthService(IUserRepository _userRepository) : IAuthService
         catch (Exception ex)
         {
             Console.Write(ex);
+            throw;
+        }
+    }
+
+    public async Task<UserModel> GetUserInfoByToken(UserInfo userInfo)
+    {
+        try
+        {
+            var user = await _userRepository.GetByIdAsync(userInfo.UserId);
+            if (user == null)
+            {
+                throw new Exception("User not found");
+            }
+            return user;
+        }
+        catch (System.Exception)
+        {
             throw;
         }
     }

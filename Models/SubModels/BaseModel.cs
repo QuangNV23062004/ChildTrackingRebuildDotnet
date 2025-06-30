@@ -8,6 +8,7 @@ public class BaseModel
 {
     [BsonElement("isDeleted"), BsonRepresentation(BsonType.Boolean)]
     public bool IsDeleted { get; set; } = false;
+
     [BsonElement("createdAt"), BsonRepresentation(BsonType.DateTime)]
     [BsonDateTimeOptions(Kind = DateTimeKind.Utc)]
     public DateTime CreatedAt { get; set; } = DateTime.UtcNow;

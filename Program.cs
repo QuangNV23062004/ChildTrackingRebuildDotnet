@@ -1,4 +1,5 @@
 using System.Text;
+using CloudinaryDotNet;
 using DotNetEnv;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
@@ -28,6 +29,7 @@ builder.Services.AddScoped<IWflhRepository, WflhRepository>();
 builder.Services.AddScoped<IRequestRepository, RequestRepository>();
 builder.Services.AddScoped<IConsultationRepository, ConsultationRepository>();
 builder.Services.AddScoped<IConsultationMessageRepository, ConsultationMessageRepository>();
+builder.Services.AddScoped<IBlogRepository, BlogRepository>();
 builder.Services.AddScoped<IUserService, UserService>();
 builder.Services.AddScoped<IAuthService, AuthService>();
 builder.Services.AddScoped<IChildService, ChildService>();
@@ -35,6 +37,7 @@ builder.Services.AddScoped<IGrowthDataService, GrowthDataService>();
 builder.Services.AddScoped<IRequestService, RequestService>();
 builder.Services.AddScoped<IConsultationService, ConsultationService>();
 builder.Services.AddScoped<IConsultationMessageService, ConsultationMessageService>();
+builder.Services.AddScoped<IBlogService, BlogService>();
 
 // MongoDB Configuration
 builder.Services.Configure<MongoDBSettings>(options =>
@@ -63,6 +66,23 @@ builder.Services.AddSingleton<IMongoDatabase>(sp =>
     var settings = sp.GetRequiredService<IOptions<MongoDBSettings>>().Value;
     return client.GetDatabase(settings.DatabaseName);
 });
+
+// Cloudinary Configuration
+
+var cloudName =
+    Environment.GetEnvironmentVariable("CLOUDINARY_CLOUD_NAME")
+    ?? throw new InvalidOperationException("CLOUDINARY_CLOUD_NAME not configured");
+var apiKey =
+    Environment.GetEnvironmentVariable("CLOUDINARY_API_KEY")
+    ?? throw new InvalidOperationException("CLOUDINARY_API_KEY not configured");
+var apiSecret =
+    Environment.GetEnvironmentVariable("CLOUDINARY_API_SECRET")
+    ?? throw new InvalidOperationException("CLOUDINARY_API_SECRET not configured");
+
+var account = new Account(cloudName, apiKey, apiSecret);
+var cloudinary = new Cloudinary(account);
+
+builder.Services.AddSingleton<ICloudinary>(cloudinary);
 
 // Controllers and Swagger
 builder.Services.AddControllers();

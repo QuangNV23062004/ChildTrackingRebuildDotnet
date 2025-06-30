@@ -1,7 +1,9 @@
 using System.IdentityModel.Tokens.Jwt;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using RestAPI.Dtos;
+using RestAPI.Helpers;
 using RestAPI.Models;
 using RestAPI.Services.interfaces;
 
@@ -12,24 +14,24 @@ namespace RestAPI.Controllers
     public class AuthController(IAuthService authService) : ControllerBase
     {
         [HttpPost("register")]
-        public async Task<ActionResult<UserModel>> Register([FromBody] AuthDto.RegisterDto registerDto)
+        public async Task<ActionResult<UserModel>> Register(
+            [FromBody] AuthDto.RegisterDto registerDto
+        )
         {
-
             var user = new UserModel
             {
                 Name = registerDto.Name,
                 Email = registerDto.Email,
-                Password = registerDto.Password
+                Password = registerDto.Password,
             };
 
             try
             {
                 var createdUser = await authService.Register(user);
-                return StatusCode(StatusCodes.Status201Created, new
-                {
-                    user = createdUser,
-                    message = "Register successful"
-                });
+                return StatusCode(
+                    StatusCodes.Status201Created,
+                    new { user = createdUser, message = "Register successful" }
+                );
             }
             catch (ArgumentException ex)
             {
@@ -45,15 +47,13 @@ namespace RestAPI.Controllers
         [HttpPost("login")]
         public async Task<ActionResult<string>> Login([FromBody] AuthDto.LoginDto loginDto)
         {
-
             try
             {
                 var token = await authService.Login(loginDto.Email, loginDto.Password);
-                return StatusCode(StatusCodes.Status200OK, new
-                {
-                    accessToken = token,
-                    message = "Login successful"
-                });
+                return StatusCode(
+                    StatusCodes.Status200OK,
+                    new { accessToken = token, message = "Login successful" }
+                );
             }
             catch (UnauthorizedAccessException)
             {
@@ -62,6 +62,23 @@ namespace RestAPI.Controllers
             catch (Exception e)
             {
                 return StatusCode(StatusCodes.Status500InternalServerError, e.Message);
+            }
+        }
+
+        [HttpGet("me")]
+        [Authorize]
+        public async Task<ActionResult<UserModel>> GetUserInfo()
+        {
+            try
+            {
+                var UserInfo = HttpContext.Items["UserInfo"] as UserInfo;
+
+                var user = await authService.GetUserInfoByToken(UserInfo);
+                return Ok(user);
+            }
+            catch (System.Exception)
+            {
+                throw;
             }
         }
     }
