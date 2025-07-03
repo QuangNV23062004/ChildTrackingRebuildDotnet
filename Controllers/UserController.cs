@@ -72,6 +72,21 @@ namespace RestAPI.Controllers
             }
         }
 
+        [HttpGet("doctors")]
+        [Authorize(Roles = "Admin,User")]
+        public async Task<ActionResult<List<UserModel>>> GetDoctorsWithRating()
+        {
+            try
+            {
+                var doctors = await userService.GetDoctorsWithRating();
+                return StatusCode(StatusCodes.Status200OK, new { data = doctors });
+            }
+            catch (System.Exception)
+            {
+                throw;
+            }
+        }
+
         [HttpGet("{id}")]
         [Authorize(Roles = "User,Admin")]
         public async Task<ActionResult<UserModel>> GetUser(string id)

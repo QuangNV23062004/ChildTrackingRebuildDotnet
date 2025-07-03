@@ -7,4 +7,5 @@ namespace RestAPI.Repositories.interfaces;
 public interface IUserRepository : IBaseRepository<UserModel>
 {
     Task<UserModel> GetUserByEmail(string email);
+    Task<List<UserModel>> GetDoctorsWithRating();
 }

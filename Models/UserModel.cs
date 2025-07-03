@@ -24,11 +24,18 @@ namespace RestAPI.Models
 
         [BsonElement("password"), BsonRepresentation(BsonType.String)]
         [Required(ErrorMessage = "Password is required")]
-        [StringLength(256, MinimumLength = 8, ErrorMessage = "Password must be at least 8 characters")]
+        [StringLength(
+            256,
+            MinimumLength = 8,
+            ErrorMessage = "Password must be at least 8 characters"
+        )]
         public string Password { get; set; } = "";
 
         [BsonElement("role"), BsonRepresentation(BsonType.String)]
         [Required(ErrorMessage = "Role is required")]
         public string Role { get; set; } = "User";
+
+        [BsonElement("rating"), BsonRepresentation(BsonType.Double)]
+        public double? Rating { get; set; } = 0;
     }
 }

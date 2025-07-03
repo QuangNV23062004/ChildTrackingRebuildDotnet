@@ -34,6 +34,7 @@ namespace RestAPI.Models
         public BlogStatus Status { get; set; } = BlogStatus.Draft;
 
         [BsonElement("userId")]
+        [BsonRepresentation(BsonType.ObjectId)]
         [Required]
         public string UserId { get; set; }
 

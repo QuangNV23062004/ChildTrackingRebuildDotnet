@@ -35,12 +35,9 @@ namespace RestAPI.Repositories.repositories
             };
             if (status != null)
             {
-                facetPipeline[0]["$match"].AsBsonDocument.Add("Status", (int)status.Value);
+                facetPipeline[0]["$match"].AsBsonDocument.Add("status", (int)status.Value);
             }
-            else
-            {
-                facetPipeline[0]["$match"].AsBsonDocument.Add("Status", (int)BlogStatus.Published);
-            }
+
             if (populationParams != null && populationParams.Length > 0)
             {
                 foreach (var param in populationParams)
@@ -60,7 +57,11 @@ namespace RestAPI.Repositories.repositories
                     facetPipeline.Add(
                         new MongoDB.Bson.BsonDocument(
                             "$unwind",
-                            new MongoDB.Bson.BsonDocument { ["path"] = "$" + param.As }
+                            new MongoDB.Bson.BsonDocument
+                            {
+                                ["path"] = "$" + param.As,
+                                ["preserveNullAndEmptyArrays"] = true,
+                            }
                         )
                     );
                 }
@@ -91,6 +92,7 @@ namespace RestAPI.Repositories.repositories
                     )
                 )
             );
+
             var facetResult = await _collection
                 .Aggregate<MongoDB.Bson.BsonDocument>(facetPipeline)
                 .FirstOrDefaultAsync();

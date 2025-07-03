@@ -80,7 +80,7 @@ public class AuthService(IUserRepository _userRepository) : IAuthService
         {
             var _user =
                 await _userRepository.GetUserByEmail(email)
-                ?? throw new Exception("User not found");
+                ?? throw new Exception("Incorrect email or password");
             bool isCorrectPassword =
                 new PasswordHasher<UserModel>().VerifyHashedPassword(
                     _user,

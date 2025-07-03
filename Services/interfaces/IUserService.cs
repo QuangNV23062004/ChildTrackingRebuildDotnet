@@ -15,5 +15,6 @@ namespace RestAPI.Services.interfaces
         Task<PaginationResult<UserModel>> GetUsers(QueryParams query);
         Task<UserModel> UpdateUser(string id, string Name, string Email);
         Task<UserModel> DeleteUser(string id);
+        Task<List<UserModel>> GetDoctorsWithRating();
     }
 }

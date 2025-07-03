@@ -106,5 +106,18 @@ namespace RestAPI.Services.services
                 throw;
             }
         }
+
+        public async Task<List<UserModel>> GetDoctorsWithRating()
+        {
+            try
+            {
+                var _doctors = await _userRepository.GetDoctorsWithRating();
+                return _doctors;
+            }
+            catch (Exception)
+            {
+                throw;
+            }
+        }
     }
 }
