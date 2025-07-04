@@ -104,7 +104,7 @@ namespace RestAPI.Controllers
             {
                 var requester = HttpContext.Items["UserInfo"] as UserInfo;
                 var result = await _requestService.GetRequestById(id, requester);
-                return Ok(new { result, message = "Request retrieved successfully" });
+                return Ok(new { data = result, message = "Request retrieved successfully" });
             }
             catch (System.Exception)
             {
@@ -148,7 +148,16 @@ namespace RestAPI.Controllers
             {
                 var requester = HttpContext.Items["UserInfo"] as UserInfo;
                 var result = await _requestService.GetRequestsByDoctorId(id, query, requester);
-                return Ok(new { result, message = "Requests retrieved successfully" });
+                return Ok(
+                    new
+                    {
+                        data = result.Data,
+                        page = result.Page,
+                        total = result.Total,
+                        totalPages = result.TotalPages,
+                        message = "Requests retrieved successfully",
+                    }
+                );
             }
             catch (System.Exception)
             {
@@ -167,7 +176,16 @@ namespace RestAPI.Controllers
             {
                 var requester = HttpContext.Items["UserInfo"] as UserInfo;
                 var result = await _requestService.GetAllRequests(query, requester, status);
-                return Ok(new { result, message = "Requests retrieved successfully" });
+                return Ok(
+                    new
+                    {
+                        data = result.Data,
+                        page = result.Page,
+                        total = result.Total,
+                        totalPages = result.TotalPages,
+                        message = "Requests retrieved successfully",
+                    }
+                );
             }
             catch (System.Exception)
             {

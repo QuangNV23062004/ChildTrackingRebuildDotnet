@@ -292,6 +292,20 @@ public class RequestRepository : Repository<RequestModel>, IRequestRepository
                         ["preserveNullAndEmptyArrays"] = false,
                     }
                 ),
+                new BsonDocument(
+                    "$lookup",
+                    new BsonDocument
+                    {
+                        ["from"] = "children",
+                        ["localField"] = "childId",
+                        ["foreignField"] = "_id",
+                        ["as"] = "child",
+                    }
+                ),
+                new BsonDocument(
+                    "$unwind",
+                    new BsonDocument { ["path"] = "$child", ["preserveNullAndEmptyArrays"] = false }
+                ),
                 new BsonDocument("$match", new BsonDocument { ["isDeleted"] = false }),
                 // Facet stage to split into count and data
                 new BsonDocument(

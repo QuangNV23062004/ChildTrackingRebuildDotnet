@@ -40,6 +40,7 @@ namespace RestAPI.Services.services
                 {
                     throw new Exception("Child not found");
                 }
+
                 if (checkChild.GuardianId != requesterInfo.UserId)
                 {
                     throw new Exception(
