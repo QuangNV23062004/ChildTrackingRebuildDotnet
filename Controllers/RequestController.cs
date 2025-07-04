@@ -129,7 +129,16 @@ namespace RestAPI.Controllers
                     requester,
                     status
                 );
-                return Ok(new { result, message = "Requests retrieved successfully" });
+                return Ok(
+                    new
+                    {
+                        data = result.Data,
+                        page = result.Page,
+                        total = result.Total,
+                        totalPages = result.TotalPages,
+                        message = "Requests retrieved successfully",
+                    }
+                );
             }
             catch (System.Exception)
             {

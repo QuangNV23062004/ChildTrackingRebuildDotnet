@@ -177,11 +177,7 @@ namespace RestAPI.Controllers
                     id
                 );
                 return Ok(
-                    new
-                    {
-                        growthVelocity = growthVelocity,
-                        message = "Growth velocity fetched successfully",
-                    }
+                    new { data = growthVelocity, message = "Growth velocity fetched successfully" }
                 );
             }
             catch (System.Exception)
