@@ -393,9 +393,12 @@ namespace RestAPI.Services.services
                     }
 
                     // Admins can only update pending requests
-                    if (checkRequest.Status != RequestStatusEnum.Pending)
+                    if (
+                        checkRequest.Status != RequestStatusEnum.Pending
+                        && checkRequest.Status != RequestStatusEnum.Admin_Rejected
+                    )
                     {
-                        throw new Exception("Can only update pending requests");
+                        throw new Exception("Can only update pending and rejected requests");
                     }
                 }
 
