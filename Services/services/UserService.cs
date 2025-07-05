@@ -5,6 +5,7 @@ using System.Security.Cryptography;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Identity;
 using MongoDB.Bson;
+using RestAPI.Enums;
 using RestAPI.Helpers;
 using RestAPI.Models;
 using RestAPI.Repositories.interfaces;
@@ -39,6 +40,16 @@ namespace RestAPI.Services.services
         {
             try
             {
+                var user = await _userRepository.GetByIdAsync(id);
+                if (user == null)
+                {
+                    throw new KeyNotFoundException("User not found");
+                }
+                if (user.Role == RoleEnum.Admin.ToString())
+                {
+                    throw new Exception("Cannot delete admin user");
+                }
+
                 var _user = await _userRepository.DeleteAsync(id);
                 if (_user == null)
                 {

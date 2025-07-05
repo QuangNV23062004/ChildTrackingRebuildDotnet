@@ -5,6 +5,7 @@ using System.Threading.Tasks;
 using RestAPI.Helpers;
 using RestAPI.Models;
 using RestAPI.Repositories.Interfaces;
+using RestAPI.Services.interfaces;
 
 namespace RestAPI.Repositories.interfaces
 {
@@ -23,5 +24,6 @@ namespace RestAPI.Repositories.interfaces
             QueryParams query,
             string? status
         );
+        Task<List<CountData>> GetNewRequests(int value, string unit);
     }
 }

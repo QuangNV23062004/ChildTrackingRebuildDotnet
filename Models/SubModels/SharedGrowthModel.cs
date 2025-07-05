@@ -33,6 +33,7 @@ namespace RestAPI.Models.SubModels
         [BsonElement("values")]
         public List<PercentileValue> Values { get; set; } = new List<PercentileValue>();
     }
+
     public class GrowthVelocityResult
     {
         public string? Period { get; set; }
@@ -42,6 +43,5 @@ namespace RestAPI.Models.SubModels
         public GrowthMetric? Weight { get; set; }
         public GrowthMetric? Height { get; set; }
         public GrowthMetric? HeadCircumference { get; set; }
-
     }
 }

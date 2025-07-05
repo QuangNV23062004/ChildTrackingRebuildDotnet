@@ -12,6 +12,7 @@ using RestAPI.Helpers;
 using RestAPI.Models;
 using RestAPI.Repositories.database;
 using RestAPI.Repositories.interfaces;
+using RestAPI.Services.interfaces;
 
 namespace RestAPI.Repositories.repositories;
 
@@ -348,5 +349,113 @@ public class RequestRepository : Repository<RequestModel>, IRequestRepository
         {
             throw new Exception("Failed to get paginated requests.", ex);
         }
+    }
+
+    public async Task<List<CountData>> GetNewRequests(int value, string unit)
+    {
+        DateTime startDate,
+            endDate;
+        string groupBy = "";
+        int interval = 0;
+        int year = DateTime.Now.Year;
+
+        switch (unit)
+        {
+            case "month":
+                // value represents month number (1-12, where 1=January, 2=February, etc.)
+                var currentYear = DateTime.Now.Year;
+                var month = value >= 1 && value <= 12 ? value : DateTime.Now.Month;
+                startDate = new DateTime(currentYear, month, 1);
+                endDate = startDate.AddMonths(1).AddDays(-1);
+                interval = endDate.Day; // Number of days in the month
+                groupBy = "%Y-%m-%d";
+                break;
+            case "year":
+                // value represents the year
+                year = value > 0 ? value : DateTime.Now.Year;
+                startDate = new DateTime(year, 1, 1);
+                endDate = new DateTime(year, 12, 31);
+                interval = 12; // 12 months
+                groupBy = "%Y-%m-01";
+                break;
+            default:
+                throw new ArgumentException("Invalid unit. Use 'month' or 'year'.");
+        }
+
+        var pipeline = new List<BsonDocument>
+        {
+            // Match requests created within the date range and not deleted
+            new BsonDocument(
+                "$match",
+                new BsonDocument
+                {
+                    {
+                        "createdAt",
+                        new BsonDocument { { "$gte", startDate }, { "$lte", endDate } }
+                    },
+                    { "isDeleted", false },
+                }
+            ),
+            // Group by date and count requests
+            new BsonDocument(
+                "$group",
+                new BsonDocument
+                {
+                    {
+                        "_id",
+                        new BsonDocument(
+                            "$dateToString",
+                            new BsonDocument { { "format", groupBy }, { "date", "$createdAt" } }
+                        )
+                    },
+                    { "count", new BsonDocument("$sum", 1) },
+                }
+            ),
+            // Project to final format
+            new BsonDocument(
+                "$project",
+                new BsonDocument
+                {
+                    { "Date", "$_id" },
+                    { "Count", "$count" },
+                    { "_id", 0 },
+                }
+            ),
+            // Sort by date
+            new BsonDocument("$sort", new BsonDocument("Date", 1)),
+        };
+
+        var result = await _collection.Aggregate<BsonDocument>(pipeline).ToListAsync();
+
+        // Create a dictionary to map dates to counts
+        var requestCountMap = result.ToDictionary(
+            doc => doc["Date"].AsString,
+            doc => doc["Count"].AsInt32
+        );
+
+        var requestCounts = new List<CountData>();
+
+        // Fill in all dates in the interval with counts (0 if no data)
+        for (int i = 0; i < interval; i++)
+        {
+            DateTime currentDate;
+            if (unit == "year")
+            {
+                // For year, generate month dates (1st of each month)
+                currentDate = new DateTime(year, i + 1, 1);
+            }
+            else
+            {
+                // For month, generate day dates
+                currentDate = startDate.AddDays(i);
+            }
+
+            string dateKey = currentDate.ToString("yyyy-MM-dd");
+            int count = requestCountMap.ContainsKey(dateKey) ? requestCountMap[dateKey] : 0;
+
+            requestCounts.Add(new CountData(currentDate, count));
+        }
+
+        return requestCounts;
     }
 }
