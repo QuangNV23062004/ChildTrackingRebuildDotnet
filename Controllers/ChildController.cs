@@ -124,7 +124,7 @@ namespace RestAPI.Controllers
                     new
                     {
                         message = "Children retrieved successfully",
-                        children = result.Data,
+                        data = result.Data,
                         page = result.Page,
                         total = result.Total,
                         totalPages = result.TotalPages,

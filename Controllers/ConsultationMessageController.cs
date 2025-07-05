@@ -71,7 +71,16 @@ namespace RestAPI.Controllers
             try
             {
                 var result = await _consultationMessageService.GetConsultationMessages(id, query);
-                return Ok(result);
+                return Ok(
+                    new
+                    {
+                        data = result.Data,
+                        page = result.Page,
+                        total = result.Total,
+                        totalPages = result.TotalPages,
+                        message = "Consultation messages retrieved successfully",
+                    }
+                );
             }
             catch (System.Exception)
             {

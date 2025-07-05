@@ -20,6 +20,7 @@ var builder = WebApplication.CreateBuilder(args);
 Env.Load();
 
 // Add services to DI container
+builder.Services.AddScoped<IStatisticService, StatisticService>();
 builder.Services.AddScoped<IUserRepository, UserRepository>();
 builder.Services.AddScoped<IChildRepository, ChildRepository>();
 builder.Services.AddScoped<IGrowthDataRepository, GrowthDataRepository>();
@@ -38,6 +39,7 @@ builder.Services.AddScoped<IRequestService, RequestService>();
 builder.Services.AddScoped<IConsultationService, ConsultationService>();
 builder.Services.AddScoped<IConsultationMessageService, ConsultationMessageService>();
 builder.Services.AddScoped<IBlogService, BlogService>();
+builder.Services.AddScoped<IStatisticService, StatisticService>();
 
 // MongoDB Configuration
 builder.Services.Configure<MongoDBSettings>(options =>

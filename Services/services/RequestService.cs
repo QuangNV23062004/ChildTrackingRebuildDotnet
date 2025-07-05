@@ -40,6 +40,7 @@ namespace RestAPI.Services.services
                 {
                     throw new Exception("Child not found");
                 }
+
                 if (checkChild.GuardianId != requesterInfo.UserId)
                 {
                     throw new Exception(
@@ -393,9 +394,12 @@ namespace RestAPI.Services.services
                     }
 
                     // Admins can only update pending requests
-                    if (checkRequest.Status != RequestStatusEnum.Pending)
+                    if (
+                        checkRequest.Status != RequestStatusEnum.Pending
+                        && checkRequest.Status != RequestStatusEnum.Admin_Rejected
+                    )
                     {
-                        throw new Exception("Can only update pending requests");
+                        throw new Exception("Can only update pending and rejected requests");
                     }
                 }
 

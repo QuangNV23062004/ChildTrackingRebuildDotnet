@@ -30,7 +30,13 @@ namespace RestAPI.Controllers
                     requestDto.Status,
                     requester
                 );
-                return Ok(new { result, message = "Consultation status updated successfully" });
+                return Ok(
+                    new
+                    {
+                        consultation = result,
+                        message = "Consultation status updated successfully",
+                    }
+                );
             }
             catch (System.Exception)
             {
@@ -70,7 +76,16 @@ namespace RestAPI.Controllers
                     query,
                     status
                 );
-                return Ok(new { consultations, message = "Consultations retrieved successfully" });
+                return Ok(
+                    new
+                    {
+                        data = consultations.Data,
+                        page = consultations.Page,
+                        total = consultations.Total,
+                        totalPages = consultations.TotalPages,
+                        message = "Consultations retrieved successfully",
+                    }
+                );
             }
             catch (System.Exception)
             {
@@ -94,7 +109,16 @@ namespace RestAPI.Controllers
                     query,
                     status
                 );
-                return Ok(new { consultations, message = "Consultations retrieved successfully" });
+                return Ok(
+                    new
+                    {
+                        data = consultations.Data,
+                        page = consultations.Page,
+                        total = consultations.Total,
+                        totalPages = consultations.TotalPages,
+                        message = "Consultations retrieved successfully",
+                    }
+                );
             }
             catch (System.Exception)
             {
@@ -112,7 +136,16 @@ namespace RestAPI.Controllers
             try
             {
                 var consultations = await _consultationService.GetConsultations(query, status);
-                return Ok(new { consultations, message = "Consultations retrieved successfully" });
+                return Ok(
+                    new
+                    {
+                        data = consultations.Data,
+                        page = consultations.Page,
+                        total = consultations.Total,
+                        totalPages = consultations.TotalPages,
+                        message = "Consultations retrieved successfully",
+                    }
+                );
             }
             catch (System.Exception)
             {

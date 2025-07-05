@@ -149,7 +149,14 @@ namespace RestAPI.Controllers
                     query
                 );
                 return Ok(
-                    new { growthData = growthData, message = "Growth data fetched successfully" }
+                    new
+                    {
+                        data = growthData.Data,
+                        page = growthData.Page,
+                        total = growthData.Total,
+                        totalPages = growthData.TotalPages,
+                        message = "Growth data fetched successfully",
+                    }
                 );
             }
             catch (System.Exception)
@@ -170,11 +177,7 @@ namespace RestAPI.Controllers
                     id
                 );
                 return Ok(
-                    new
-                    {
-                        growthVelocity = growthVelocity,
-                        message = "Growth velocity fetched successfully",
-                    }
+                    new { data = growthVelocity, message = "Growth velocity fetched successfully" }
                 );
             }
             catch (System.Exception)
