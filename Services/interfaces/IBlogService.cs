@@ -16,7 +16,7 @@ namespace RestAPI.Services.interfaces
             IFormFileCollection attachments
         );
         Task<BlogModel> UpdateBlogStatus(string id, BlogStatus status);
-        Task<BlogModel> GetBlogById(string id, UserInfo userInfo);
+        Task<BlogModel> GetBlogById(string id, UserInfo? userInfo = null);
         Task<PaginationResult<BlogModel>> GetBlogs(
             QueryParams query,
             UserInfo userInfo,

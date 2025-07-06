@@ -98,9 +98,19 @@ namespace RestAPI.Controllers
         }
 
         [HttpGet("{id}")]
-        public async Task<IActionResult> GetBlog()
+        public async Task<IActionResult> GetBlog(string id)
         {
-            return StatusCode(501);
+            try
+            {
+                var UserInfo = HttpContext.Items["UserInfo"] as UserInfo;
+
+                var blog = await _blogService.GetBlogById(id, UserInfo);
+                return Ok(new { blog = blog, message = "Get blog successfully" });
+            }
+            catch (System.Exception)
+            {
+                throw;
+            }
         }
     }
 }

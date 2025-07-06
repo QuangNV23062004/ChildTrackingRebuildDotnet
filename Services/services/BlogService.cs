@@ -61,7 +61,7 @@ namespace RestAPI.Services.services
             }
         }
 
-        public async Task<BlogModel> GetBlogById(string id, UserInfo userInfo)
+        public async Task<BlogModel> GetBlogById(string id, UserInfo? userInfo)
         {
             try
             {
@@ -84,7 +84,10 @@ namespace RestAPI.Services.services
                     throw new KeyNotFoundException("Blog not found");
                 }
 
-                if (blog.Status != BlogStatus.Published)
+                if (
+                    blog.Status != BlogStatus.Published
+                    && (userInfo == null || Enum.Parse<RoleEnum>(userInfo.Role) != RoleEnum.Admin)
+                )
                 {
                     throw new KeyNotFoundException("Blog not found");
                 }
