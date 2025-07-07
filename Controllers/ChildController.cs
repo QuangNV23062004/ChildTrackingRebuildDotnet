@@ -60,6 +60,7 @@ namespace RestAPI.Controllers
 
                 var childModel = new ChildModel
                 {
+                    Id = id,
                     Name = updateData.Name,
                     Gender = (GenderEnum)updateData.Gender,
                     BirthDate = updateData.BirthDate,
@@ -67,6 +68,7 @@ namespace RestAPI.Controllers
                     FeedingType = updateData.FeedingType,
                     Allergies = updateData.Allergies,
                 };
+
                 var updated = await _childService.UpdateChildAsync(id, requester!, childModel);
 
                 return Ok(new { message = "Child updated successfully", updatedChild = updated });

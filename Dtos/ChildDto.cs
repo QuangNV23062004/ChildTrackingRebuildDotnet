@@ -10,7 +10,11 @@ namespace RestAPI.Dtos
         public class CreateChildDto
         {
             [Required]
-            [StringLength(100, MinimumLength = 1, ErrorMessage = "Name is required and must be between 1 and 100 characters")]
+            [StringLength(
+                100,
+                MinimumLength = 1,
+                ErrorMessage = "Name is required and must be between 1 and 100 characters"
+            )]
             public string Name { get; set; } = null!;
 
             [Required]
@@ -22,10 +26,6 @@ namespace RestAPI.Dtos
 
             [StringLength(500, ErrorMessage = "Note cannot exceed 500 characters")]
             public string Note { get; set; } = "N/A";
-
-            [Required]
-            [RegularExpression("^(Parent|Guardian|Sibling|Other)$", ErrorMessage = "Relationship must be one of: Parent, Guardian, Sibling, Other")]
-            public string Relationship { get; set; } = null!;
 
             [Required]
             public FeedingTypeEnum FeedingType { get; set; }
@@ -52,7 +52,11 @@ namespace RestAPI.Dtos
         public class UpdateChildDto
         {
             [Required]
-            [StringLength(100, MinimumLength = 1, ErrorMessage = "Name must be between 1 and 100 characters")]
+            [StringLength(
+                100,
+                MinimumLength = 1,
+                ErrorMessage = "Name must be between 1 and 100 characters"
+            )]
             public string Name { get; set; } = null!;
 
             [Required]
@@ -65,10 +69,6 @@ namespace RestAPI.Dtos
             [Required]
             [StringLength(500, ErrorMessage = "Note cannot exceed 500 characters")]
             public string Note { get; set; } = null!;
-
-            [Required]
-            [RegularExpression("^(Parent|Guardian|Sibling|Other)$", ErrorMessage = "Relationship must be one of: Parent, Guardian, Sibling, Other")]
-            public string Relationship { get; set; } = null!;
 
             [Required]
             public FeedingTypeEnum FeedingType { get; set; }

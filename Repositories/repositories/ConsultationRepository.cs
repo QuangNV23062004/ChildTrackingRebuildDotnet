@@ -240,6 +240,7 @@ namespace RestAPI.Repositories.repositories
                         new BsonDocument
                         {
                             ["request.doctorId"] = new BsonObjectId(ObjectId.Parse(requesterId)),
+                            ["status"] = ConsultationStatusEnum.Ongoing.ToString(),
                             ["isDeleted"] = false,
                         }
                     ),

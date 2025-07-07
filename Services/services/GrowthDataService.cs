@@ -98,6 +98,39 @@ namespace RestAPI.Services.services
             return percentile % 1 == 0 ? $"{percentile}" : percentile.ToString("F2");
         }
 
+        private LevelEnum DetermineLevel(double percentile)
+        {
+            // If percentile is -1, it means no data available
+            if (percentile == -1)
+                return LevelEnum.NA;
+
+            if (percentile < 5)
+                return LevelEnum.Low;
+            else if (percentile >= 5 && percentile < 15)
+                return LevelEnum.BelowAverage;
+            else if (percentile >= 15 && percentile < 95)
+                return LevelEnum.Average;
+            else if (percentile >= 95)
+                return LevelEnum.AboveAverage;
+            else
+                return LevelEnum.NA;
+        }
+
+        private string FormatPeriod(double firstMonth, double lastMonth)
+        {
+            // Round to 1 decimal place for better readability
+            var firstFormatted = Math.Round(firstMonth, 1);
+            var lastFormatted = Math.Round(lastMonth, 1);
+
+            // If both are whole numbers, display as integers
+            if (firstFormatted % 1 == 0 && lastFormatted % 1 == 0)
+            {
+                return $"{(int)firstFormatted} - {(int)lastFormatted} months";
+            }
+
+            return $"{firstFormatted} - {lastFormatted} months";
+        }
+
         private async Task<GrowthResult> generateGrowthResult(
             GrowthDataModel growthData,
             ChildModel child
@@ -877,11 +910,10 @@ namespace RestAPI.Services.services
                     result.Add(
                         new GrowthVelocityResult
                         {
-                            Period =
-                                interval.FirstInterval.InMonths.ToString()
-                                + " - "
-                                + interval.LastInterval.InMonths.ToString()
-                                + " months",
+                            Period = FormatPeriod(
+                                interval.FirstInterval.InMonths,
+                                interval.LastInterval.InMonths
+                            ),
                             StartDate = child.BirthDate.AddDays(interval.FirstInterval.InDays),
                             EndDate = child.BirthDate.AddDays(interval.LastInterval.InDays),
                             Height = new GrowthMetric
@@ -974,24 +1006,24 @@ namespace RestAPI.Services.services
                         {
                             Percentile = heightPercentile ?? -1,
                             Description = heightDescription,
-                            Level = heightPercentile != null ? LevelEnum.NA : LevelEnum.NA,
+                            Level = DetermineLevel(heightPercentile ?? -1),
                         },
                         Weight = new GrowthMetric
                         {
                             Percentile = weightPercentile ?? -1,
                             Description = weightDescription,
-                            Level = weightPercentile != null ? LevelEnum.NA : LevelEnum.NA,
+                            Level = DetermineLevel(weightPercentile ?? -1),
                         },
                         HeadCircumference = new GrowthMetric
                         {
                             Percentile = headCircumferencePercentile ?? -1,
                             Description = headCircumferenceDescription,
-                            Level =
-                                headCircumferencePercentile != null ? LevelEnum.NA : LevelEnum.NA,
+                            Level = DetermineLevel(headCircumferencePercentile ?? -1),
                         },
                     }
                 );
             }
+            Console.WriteLine($"[calculateGrowthVelocity] Result: {result}");
             return result;
         }
 
@@ -1058,6 +1090,17 @@ namespace RestAPI.Services.services
             var results = await calculateGrowthVelocity(child, oneMonthIncrementData);
 
             var childUpdate = await _childRepository.GetByIdAsync(childId);
+            if (childUpdate == null)
+            {
+                throw new KeyNotFoundException("Child not found");
+            }
+            if (
+                childUpdate.GuardianId.ToString() != requesterId
+                && Enum.Parse<RoleEnum>(requesterRole) == RoleEnum.User
+            )
+            {
+                throw new KeyNotFoundException("Growth data not found");
+            }
             childUpdate.GrowthVelocityResult = results;
             await _childRepository.UpdateAsync(childId, childUpdate);
 
@@ -1118,6 +1161,8 @@ namespace RestAPI.Services.services
                     InputDate = growthData.InputDate,
                     Height = growthData.Height,
                     Weight = growthData.Weight,
+                    Bmi = growthData.Weight * 10000 / (growthData.Height * growthData.Height),
+                    ArmCircumference = growthData.ArmCircumference,
                     HeadCircumference = growthData.HeadCircumference,
                     GrowthResult = growthResult,
                 };
@@ -1141,19 +1186,7 @@ namespace RestAPI.Services.services
             {
                 var requesterId = requesterInfo.UserId;
                 var requesterRole = requesterInfo.Role;
-                var user = await _userRepository.GetByIdAsync(
-                    requesterId,
-                    new PopulationModel[]
-                    {
-                        new PopulationModel
-                        {
-                            LocalField = "childId",
-                            ForeignField = "_id",
-                            Collection = "children",
-                            As = "child",
-                        },
-                    }
-                );
+                var user = await _userRepository.GetByIdAsync(requesterId);
                 if (user == null)
                 {
                     throw new KeyNotFoundException("User not found");
@@ -1164,8 +1197,13 @@ namespace RestAPI.Services.services
                 {
                     throw new KeyNotFoundException("Growth data not found");
                 }
+                var child = await _childRepository.GetByIdAsync(growthData.ChildId.ToString());
+                if (child == null)
+                {
+                    throw new KeyNotFoundException("Child not found");
+                }
                 if (
-                    growthData.ChildId.ToString() != requesterId
+                    child.GuardianId.ToString() != requesterId
                     && Enum.Parse<RoleEnum>(requesterRole) == RoleEnum.User
                 )
                 {
@@ -1344,10 +1382,6 @@ namespace RestAPI.Services.services
                     }
                 }
 
-                // Recalculate growth result
-                var growthResult = await generateGrowthResult(growthData, child);
-                growthData.GrowthResult = growthResult;
-
                 // Ensure nullable doubles are converted to non-nullable doubles with default value (0.0) if null
                 if (updateData.Height != null && updateData.Height > 0)
                     growthData.Height = updateData.Height;
@@ -1357,7 +1391,13 @@ namespace RestAPI.Services.services
                     growthData.HeadCircumference = updateData.HeadCircumference;
                 if (updateData.ArmCircumference != null && updateData.ArmCircumference > 0)
                     growthData.ArmCircumference = updateData.ArmCircumference;
+                if (updateData.Height != null || updateData.Weight != null)
+                    growthData.Bmi =
+                        updateData.Weight * 10000 / (growthData.Height * growthData.Height);
 
+                // Recalculate growth result
+                var growthResult = await generateGrowthResult(growthData, child);
+                growthData.GrowthResult = growthResult;
                 var updatedGrowthData = await _growthDataRepository.UpdateAsync(
                     growthDataId,
                     growthData

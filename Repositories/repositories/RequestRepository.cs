@@ -82,6 +82,7 @@ public class RequestRepository : Repository<RequestModel>, IRequestRepository
                     new BsonDocument
                     {
                         ["doctorId"] = new BsonObjectId(ObjectId.Parse(doctorId)),
+                        ["status"] = RequestStatusEnum.Admin_Accepted.ToString(),
                         ["isDeleted"] = false,
                     }
                 ),

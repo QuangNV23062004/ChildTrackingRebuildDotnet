@@ -98,19 +98,7 @@ public class ChildService(IChildRepository _childRepository, IUserRepository _us
     {
         try
         {
-            var checkUser = await _userRepository.GetByIdAsync(
-                requesterInfo.UserId,
-                new PopulationModel[]
-                {
-                    new PopulationModel
-                    {
-                        LocalField = "guardianId",
-                        ForeignField = "_id",
-                        Collection = "users",
-                        As = "guardian",
-                    },
-                }
-            );
+            var checkUser = await _userRepository.GetByIdAsync(requesterInfo.UserId);
             if (checkUser == null)
             {
                 throw new KeyNotFoundException("User with the specified id does not exist");
@@ -168,7 +156,32 @@ public class ChildService(IChildRepository _childRepository, IUserRepository _us
                     "You do not have permission to perform this action"
                 );
             }
-            var updatedChild = await _childRepository.UpdateAsync(childId, updateData);
+            if (updateData.Name != null)
+            {
+                child.Name = updateData.Name;
+            }
+            if (updateData.Gender != null)
+            {
+                child.Gender = updateData.Gender;
+            }
+            if (updateData.BirthDate != null)
+            {
+                child.BirthDate = updateData.BirthDate;
+            }
+            if (updateData.Note != null)
+            {
+                child.Note = updateData.Note;
+            }
+            if (updateData.FeedingType != null)
+            {
+                child.FeedingType = updateData.FeedingType;
+            }
+            if (updateData.Allergies != null)
+            {
+                child.Allergies = updateData.Allergies;
+            }
+            child.UpdatedAt = DateTime.UtcNow;
+            var updatedChild = await _childRepository.UpdateAsync(childId, child);
             return updatedChild;
         }
         catch (System.Exception)

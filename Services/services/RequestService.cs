@@ -93,6 +93,15 @@ namespace RestAPI.Services.services
                     throw new Exception("You are not authorized to delete this request");
                 }
 
+                if (
+                    checkRequest.Status != RequestStatusEnum.Pending
+                    || checkRequest.Status != RequestStatusEnum.Admin_Rejected
+                    || checkRequest.Status != RequestStatusEnum.Doctor_Rejected
+                )
+                {
+                    throw new Exception("Can only delete pending and rejected requests");
+                }
+
                 var request = await _requestRepository.DeleteAsync(id);
                 if (request == null)
                 {
@@ -214,11 +223,6 @@ namespace RestAPI.Services.services
                 {
                     throw new Exception("You are not authorized to access this request");
                 }
-
-                // Doctors can see all requests assigned to them (accepted, rejected, pending admin approval)
-                // They need to track their decisions and ongoing consultations
-                // If no status filter is provided, show all their assigned requests
-                // If status filter is provided, respect the filter
 
                 var requests = await _requestRepository.GetRequestsByDoctorId(doctorId, query);
                 return requests;

@@ -34,8 +34,6 @@ namespace RestAPI.Models
         public double InDays { get; set; }
     }
 
-
-
     public class GrowthMetricForAgeModel : BaseModel
     {
         [BsonId]
@@ -56,6 +54,4 @@ namespace RestAPI.Models
         [BsonElement("percentiles")]
         public Percentiles Percentiles { get; set; } = null!;
     }
-
-
 }
