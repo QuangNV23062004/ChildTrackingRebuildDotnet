@@ -9,19 +9,22 @@ using RestAPI.Enums;
 using RestAPI.Helpers;
 using RestAPI.Models;
 using RestAPI.Services.interfaces;
+using Microsoft.Extensions.Logging;
 
 namespace RestAPI.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]
     [Authorize(Roles = "User,Admin")] // Only users with role 0 or 1 can access this controller
-    public class ChildController(IChildService _childService) : ControllerBase
+    public class ChildController(IChildService _childService, ILogger<ChildController> _logger) : ControllerBase
     {
         [HttpPost]
         public async Task<IActionResult> CreateChild([FromBody] ChildDto.CreateChildDto childData)
         {
             try
             {
+                _logger.LogInformation("CreateChild request received. Request body: {@ChildData}", childData);
+                Console.WriteLine($"CreateChild request received. Request body: {System.Text.Json.JsonSerializer.Serialize(childData)}");
                 var requester = HttpContext.Items["UserInfo"] as UserInfo;
 
                 var childModel = new ChildModel
@@ -56,19 +59,27 @@ namespace RestAPI.Controllers
         {
             try
             {
+                _logger.LogInformation("UpdateChild request received for ID: {Id}. Request body: {@UpdateData}", id, updateData);
+                Console.WriteLine($"UpdateChild request received for ID: {id}. Request body: {System.Text.Json.JsonSerializer.Serialize(updateData)}");
                 var requester = HttpContext.Items["UserInfo"] as UserInfo;
 
+                // Fetch the existing child to get the GuardianId
+                var existingChild = await _childService.GetChildByIdAsync(id, requester!);
+                if (existingChild == null)
+                {
+                    return NotFound();
+                }
                 var childModel = new ChildModel
                 {
-                    Id = id,
+                    Id = id, // Add
                     Name = updateData.Name,
                     Gender = (GenderEnum)updateData.Gender,
                     BirthDate = updateData.BirthDate,
                     Note = updateData.Note,
                     FeedingType = updateData.FeedingType,
                     Allergies = updateData.Allergies,
+                    GuardianId = existingChild.GuardianId // Preserve GuardianId
                 };
-
                 var updated = await _childService.UpdateChildAsync(id, requester!, childModel);
 
                 return Ok(new { message = "Child updated successfully", updatedChild = updated });
