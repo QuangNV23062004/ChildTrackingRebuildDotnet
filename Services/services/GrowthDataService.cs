@@ -17,7 +17,7 @@ namespace RestAPI.Services.services
         IUserRepository _userRepository,
         IChildRepository _childRepository,
         IGrowthMetricForAgeRepository _growthMetricForAgeRepository,
-        IGrowthVelocitoryRepository _growthVelogicityRepository,
+        IGrowthVelocityRepository _growthVelocityRepository,
         IWflhRepository _wflhRepository
     ) : IGrowthDataService
     {
@@ -1061,7 +1061,7 @@ namespace RestAPI.Services.services
             var oneMonthIncrementData = new List<GrowthVelocityModel>();
             if (ageInDays > 30.4375)
             {
-                var growthVelocityData = await _growthVelogicityRepository.GetGrowthVelocityData(
+                var growthVelocityData = await _growthVelocityRepository.GetGrowthVelocityData(
                     (int)child.Gender
                 );
                 var counter = 2;

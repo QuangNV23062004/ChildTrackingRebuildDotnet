@@ -4,7 +4,7 @@ using RestAPI.Repositories.Interfaces;
 
 namespace RestAPI.Repositories.interfaces;
 
-public interface IGrowthVelocitoryRepository : IBaseRepository<GrowthVelocityModel>
+public interface IGrowthVelocityRepository : IBaseRepository<GrowthVelocityModel>
 {
     Task<List<GrowthVelocityModel>> GetGrowthVelocityData(int gender);
 }

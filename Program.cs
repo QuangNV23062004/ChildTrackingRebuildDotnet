@@ -25,7 +25,7 @@ builder.Services.AddScoped<IUserRepository, UserRepository>();
 builder.Services.AddScoped<IChildRepository, ChildRepository>();
 builder.Services.AddScoped<IGrowthDataRepository, GrowthDataRepository>();
 builder.Services.AddScoped<IGrowthMetricForAgeRepository, GrowthMetricsForAgeRepository>();
-builder.Services.AddScoped<IGrowthVelocitoryRepository, GrowthVelocityRepository>();
+builder.Services.AddScoped<IGrowthVelocityRepository, GrowthVelocityRepository>();
 builder.Services.AddScoped<IWflhRepository, WflhRepository>();
 builder.Services.AddScoped<IRequestRepository, RequestRepository>();
 builder.Services.AddScoped<IConsultationRepository, ConsultationRepository>();

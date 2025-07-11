@@ -4,6 +4,28 @@ using System.ComponentModel.DataAnnotations;
 
 namespace RestAPI.Dtos
 {
+    public class CurrentDateAttribute : ValidationAttribute
+    {
+        protected override ValidationResult IsValid(
+            object value,
+            ValidationContext validationContext
+        )
+        {
+            if (value == null)
+                return ValidationResult.Success;
+
+            DateTime inputDate = (DateTime)value;
+            DateTime currentDate = DateTime.Today;
+
+            if (inputDate > currentDate)
+            {
+                return new ValidationResult("Input date cannot be more than current date");
+            }
+
+            return ValidationResult.Success;
+        }
+    }
+
     public class GrowthDataDto
     {
         public class CreateGrowthDataDto
@@ -21,6 +43,7 @@ namespace RestAPI.Dtos
             public double ArmCircumference { get; set; }
 
             [Required]
+            [CurrentDate(ErrorMessage = "Input date cannot be more than current date")]
             public DateTime InputDate { get; set; }
         }
 
@@ -39,6 +62,7 @@ namespace RestAPI.Dtos
             public double ArmCircumference { get; set; }
 
             [Required]
+            [CurrentDate(ErrorMessage = "Input date cannot be more than current date")]
             public DateTime InputDate { get; set; }
         }
 
@@ -63,6 +87,7 @@ namespace RestAPI.Dtos
             public double ArmCircumference { get; set; }
 
             [Required]
+            [CurrentDate(ErrorMessage = "Input date cannot be more than current date")]
             public DateTime InputDate { get; set; }
         }
     }
