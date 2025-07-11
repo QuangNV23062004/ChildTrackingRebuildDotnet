@@ -1379,6 +1379,8 @@ namespace RestAPI.Services.services
                                 );
                             }
                         }
+                        // Assign the new date after passing duplicate check
+                        growthData.InputDate = updateData.InputDate;
                     }
                 }
 
@@ -1407,6 +1409,9 @@ namespace RestAPI.Services.services
                 {
                     throw new KeyNotFoundException("Growth data not found or cannot be updated");
                 }
+
+                // Recalculate growth velocity for the child after update
+                await generateGrowthVelocityByChildId(requesterInfo, child.Id.ToString());
 
                 return updatedGrowthData;
             }
