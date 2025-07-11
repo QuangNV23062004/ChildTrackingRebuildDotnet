@@ -8,7 +8,7 @@ using RestAPI.Repositories.interfaces;
 
 namespace RestAPI.Repositories.repositories;
 
-public class GrowthVelocityRepository : Repository<GrowthVelocityModel>, IGrowthVelocitoryRepository
+public class GrowthVelocityRepository : Repository<GrowthVelocityModel>, IGrowthVelocityRepository
 {
     public GrowthVelocityRepository(IOptions<MongoDBSettings> settings)
         : base(settings) { }
