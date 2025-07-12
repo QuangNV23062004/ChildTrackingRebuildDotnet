@@ -29,5 +29,14 @@ namespace RestAPI.Models
 
         [BsonElement("request")]
         public RequestModel? Request { get; set; }
+
+        [BsonElement("doctor")]
+        public UserModel? Doctor { get; set; }
+
+        [BsonElement("member")]
+        public UserModel? Member { get; set; }
+
+        [BsonElement("child")]
+        public ChildModel? Child { get; set; }
     }
 }

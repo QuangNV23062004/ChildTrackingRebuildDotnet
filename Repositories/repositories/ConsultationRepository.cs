@@ -306,7 +306,7 @@ namespace RestAPI.Repositories.repositories
                         new BsonDocument
                         {
                             ["from"] = "requests",
-                            ["localField"] = "doctorId",
+                            ["localField"] = "requestId",
                             ["foreignField"] = "_id",
                             ["as"] = "request",
                         }
