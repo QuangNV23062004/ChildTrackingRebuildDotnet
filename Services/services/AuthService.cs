@@ -15,6 +15,8 @@ using Sprache;
 
 namespace RestAPI.Services.services;
 
+//test new render secret
+
 public class AuthService(IUserRepository _userRepository) : IAuthService
 {
     private string GenerateJsonWebToken(UserModel user)
