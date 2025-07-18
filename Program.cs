@@ -16,6 +16,9 @@ using RestAPI.Services.services;
 
 var builder = WebApplication.CreateBuilder(args);
 
+//add razors
+builder.Services.AddRazorPages();
+
 // Load environment variables
 Env.Load();
 

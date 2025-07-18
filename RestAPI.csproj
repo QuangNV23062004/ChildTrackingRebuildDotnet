@@ -19,5 +19,6 @@
     <PackageReference Include="Microsoft.EntityFrameworkCore.Tools" Version="9.0.6"/>
     <PackageReference Include="MongoDB.Driver" Version="3.4.0"/>
     <PackageReference Include="HtmlSanitizer" Version="9.0.886"/>
+    <PackageReference Include="Razor.Templating.Core" Version="2.1.0"/>
   </ItemGroup>
 </Project>
