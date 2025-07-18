@@ -1,4 +1,3 @@
-
 namespace RestAPI.Repositories.database;
 
 public class MongoDBSettings

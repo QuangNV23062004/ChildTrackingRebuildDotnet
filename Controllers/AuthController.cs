@@ -4,6 +4,7 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using RestAPI.Dtos;
 using RestAPI.Helpers;
+using RestAPI.Middlewares;
 using RestAPI.Models;
 using RestAPI.Services.interfaces;
 
@@ -11,7 +12,7 @@ namespace RestAPI.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]
-    public class AuthController(IAuthService authService) : ControllerBase
+    public class AuthController(IAuthService authService) : Controller
     {
         [HttpPost("register")]
         public async Task<ActionResult<UserModel>> Register(
@@ -27,10 +28,14 @@ namespace RestAPI.Controllers
 
             try
             {
-                var createdUser = await authService.Register(user);
+                var response = await authService.Register(user);
                 return StatusCode(
                     StatusCodes.Status201Created,
-                    new { user = createdUser, message = "Register successful" }
+                    new
+                    {
+                        success = response,
+                        message = "Register successful, please check your email for verfication",
+                    }
                 );
             }
             catch (ArgumentException ex)
@@ -41,6 +46,22 @@ namespace RestAPI.Controllers
             {
                 Console.Write(e);
                 return StatusCode(StatusCodes.Status500InternalServerError, e.Message);
+            }
+        }
+
+        [HttpGet("verify")]
+        public async Task<ActionResult> VerifyUser([FromQuery] string verificationToken)
+        {
+            try
+            {
+                var user = await authService.VerifyUser(verificationToken);
+
+                return View("~/Pages/EmailTemplates/VerifySuccess.cshtml");
+            }
+            catch (System.Exception)
+            {
+                // Optionally serve an error page here
+                throw;
             }
         }
 

@@ -12,7 +12,10 @@ namespace RestAPI.Middlewares
         private readonly RequestDelegate _next;
         private readonly ILogger<ErrorHandlingMiddleware> _logger;
 
-        public ErrorHandlingMiddleware(RequestDelegate next, ILogger<ErrorHandlingMiddleware> logger)
+        public ErrorHandlingMiddleware(
+            RequestDelegate next,
+            ILogger<ErrorHandlingMiddleware> logger
+        )
         {
             _next = next;
             _logger = logger;
@@ -38,17 +41,15 @@ namespace RestAPI.Middlewares
             {
                 ArgumentNullException => HttpStatusCode.BadRequest,
                 UnauthorizedAccessException => HttpStatusCode.Unauthorized,
-                _ => HttpStatusCode.InternalServerError
+                _ => HttpStatusCode.InternalServerError,
             };
 
             // Optional: log to DB
             // await errorLogService.LogAsync(new ErrorLog { ... });
 
-            var result = JsonSerializer.Serialize(new
-            {
-                error = ex.Message,
-                code = (int)statusCode
-            });
+            var result = JsonSerializer.Serialize(
+                new { error = ex.Message, code = (int)statusCode }
+            );
 
             context.Response.ContentType = "application/json";
             context.Response.StatusCode = (int)statusCode;
