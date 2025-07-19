@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using RestAPI.Dtos;
+using RestAPI.Enums;
 using RestAPI.Helpers;
 using RestAPI.Models;
 
@@ -13,7 +14,13 @@ namespace RestAPI.Services.interfaces
         Task<UserModel> CreateUser(UserModel userDto);
         Task<UserModel> GetUser(string id);
         Task<PaginationResult<UserModel>> GetUsers(QueryParams query);
-        Task<UserModel> UpdateUser(string id, string Name, string Email);
+        Task<UserModel> UpdateUser(
+            string id,
+            string Name,
+            string Email,
+            RoleEnum? Role,
+            string userId
+        );
         Task<UserModel> DeleteUser(string id);
         Task<List<UserModel>> GetDoctorsWithRating();
     }

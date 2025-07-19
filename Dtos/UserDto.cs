@@ -13,6 +13,9 @@ namespace RestAPI.Dtos
             [EmailAddress(ErrorMessage = "Invalid email format")]
             [StringLength(100, ErrorMessage = "Email cannot exceed 100 characters")]
             public string? Email { get; set; }
+
+            [EnumDataType(typeof(RoleEnum), ErrorMessage = "Invalid role")]
+            public RoleEnum? Role { get; set; }
         }
 
         public class CreateUserDto

@@ -93,7 +93,13 @@ namespace RestAPI.Services.services
             }
         }
 
-        public async Task<UserModel> UpdateUser(string id, string Name, string Email)
+        public async Task<UserModel> UpdateUser(
+            string id,
+            string Name,
+            string Email,
+            RoleEnum? Role,
+            string userId
+        )
         {
             try
             {
@@ -104,6 +110,19 @@ namespace RestAPI.Services.services
                 }
                 existing_user.Name = Name ?? existing_user.Name;
                 existing_user.Email = Email ?? existing_user.Email;
+                if (Role != null && existing_user.Role != Role.ToString())
+                {
+                    var checkRequester = await _userRepository.GetByIdAsync(userId);
+                    if (checkRequester == null)
+                    {
+                        throw new KeyNotFoundException("User not found");
+                    }
+                    if (Enum.Parse<RoleEnum>(checkRequester.Role) != RoleEnum.Admin)
+                    {
+                        throw new Exception("Only admin can update role");
+                    }
+                    existing_user.Role = Role.ToString();
+                }
                 var _user = await _userRepository.UpdateAsync(id, existing_user);
 
                 if (_user == null)

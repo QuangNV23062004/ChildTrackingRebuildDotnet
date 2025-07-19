@@ -53,12 +53,14 @@ namespace RestAPI.Controllers
         {
             try
             {
+                string? userId = User.FindFirst("userId")?.Value;
                 var users = await userService.GetUsers(query);
+                var filteredUsers = users.Data.Where(u => u.Id != userId).ToList();
                 return StatusCode(
                     StatusCodes.Status200OK,
                     new
                     {
-                        data = users.Data,
+                        data = filteredUsers,
                         total = users.Total,
                         page = users.Page,
                         totalPages = users.TotalPages,
@@ -100,6 +102,7 @@ namespace RestAPI.Controllers
                 Console.WriteLine(userId);
                 Console.WriteLine(role);
                 var user = await userService.GetUser(id);
+
                 return StatusCode(
                     StatusCodes.Status200OK,
                     new { user = user, message = "Get user successful" }
@@ -133,8 +136,14 @@ namespace RestAPI.Controllers
                         }
                     );
                 }
-
-                var updatedUser = await userService.UpdateUser(id, userDto.Name, userDto.Email);
+                string? userId = User.FindFirst("userId")?.Value;
+                var updatedUser = await userService.UpdateUser(
+                    id,
+                    userDto.Name,
+                    userDto.Email,
+                    userDto.Role,
+                    userId
+                );
                 return StatusCode(
                     StatusCodes.Status200OK,
                     new { user = updatedUser, message = "Update user successful" }
